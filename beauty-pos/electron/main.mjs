@@ -1,12 +1,22 @@
 import { app, BrowserWindow } from "electron";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 console.log("[main] __dirname =", __dirname);
 console.log("[main] preload path =", path.join(__dirname, "preload.cjs"));
+
+require("./db.cjs");
+
+const { registerProductHandlers } = require("./ipc/products.cjs");
+const { registerCheckoutHandlers } = require("./ipc/checkout.cjs");
+const { registerReceiptHandlers } = require('./ipc/receipts.cjs')
+const { registerDevToolHandlers } = require('./ipc/dev-tools.cjs')
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -26,7 +36,13 @@ function createWindow() {
   }
 }
 
+app.setName('WigsnStyle Point of Sale System')
+
 app.whenReady().then(() => {
+  registerProductHandlers();
+  registerCheckoutHandlers();
+  registerReceiptHandlers();
+  registerDevToolHandlers();
   createWindow();
 
   app.on("activate", () => {

@@ -10,9 +10,11 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "electron:start": "electron .",
-    "dist:win": "npm run build && electron-builder --win"
+    "dist:win": "npm run build && electron-builder --win",
+    "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
+    "better-sqlite3": "^12.8.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   },
