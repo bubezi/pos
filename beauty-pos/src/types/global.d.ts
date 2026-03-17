@@ -13,6 +13,8 @@ declare global {
           productId: number;
           stockQty: number;
         }) => Promise<{ success: boolean }>;
+        findBySku: (sku: string) => Promise<Product | null>;
+        search: (term: string) => Promise<Product[]>;
       };
       checkout: {
         completeSale: (payload: CheckoutPayload) => Promise<CheckoutResult>;
@@ -37,12 +39,13 @@ declare global {
     reorder_level: number;
     is_active: number;
   }
-
+  
   interface CartItem {
     productId: number;
     name: string;
     price: number;
     quantity: number;
+    sku?: string;
   }
 
   interface CheckoutPayload {

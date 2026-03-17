@@ -1,10 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import "../styles/checkout.css";
 
 export default function CheckoutPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [amountPaid, setAmountPaid] = useState<number>(0);
   const [message, setMessage] = useState<string>("");
+  const [searchInput, setSearchInput] = useState<string>("");
+  const [suggestions, setSuggestions] = useState<Product[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
+
+  const searchRef = useRef<HTMLInputElement | null>(null);
+  const searchBoxRef = useRef<HTMLDivElement | null>(null);
 
   async function loadProducts() {
     try {
@@ -20,20 +28,76 @@ export default function CheckoutPage() {
     loadProducts();
   }, []);
 
-  const total = useMemo(() => {
+  useEffect(() => {
+    searchRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        searchBoxRef.current &&
+        !searchBoxRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+        setHighlightedIndex(-1);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const term = searchInput.trim();
+
+    if (!term) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      setHighlightedIndex(-1);
+      return;
+    }
+
+    const timeout = setTimeout(async () => {
+      try {
+        const results = await window.posAPI.products.search(term);
+        setSuggestions(results);
+        setShowSuggestions(results.length > 0);
+        setHighlightedIndex(results.length > 0 ? 0 : -1);
+      } catch (error) {
+        console.error(error);
+      }
+    }, 120);
+
+    return () => clearTimeout(timeout);
+  }, [searchInput]);
+
+  const subtotal = useMemo(() => {
     return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   }, [cart]);
+
+  const totalItems = useMemo(() => {
+    return cart.reduce((sum, item) => sum + item.quantity, 0);
+  }, [cart]);
+
+  function setInfo(text: string) {
+    setMessage(text);
+  }
+
+  function clearMessage() {
+    setMessage("");
+  }
 
   function addToCart(product: Product) {
     const existing = cart.find((x) => x.productId === product.id);
     const nextQty = existing ? existing.quantity + 1 : 1;
 
     if (nextQty > product.stock_qty) {
-      setMessage(`Not enough stock for ${product.name}`);
+      setInfo(`Not enough stock for ${product.name}`);
       return;
     }
 
-    setMessage("");
+    clearMessage();
+
     setCart((prev) => {
       if (existing) {
         return prev.map((x) =>
@@ -48,9 +112,16 @@ export default function CheckoutPage() {
           name: product.name,
           price: Number(product.price),
           quantity: 1,
+          sku: product.sku,
         },
       ];
     });
+
+    setSearchInput("");
+    setSuggestions([]);
+    setShowSuggestions(false);
+    setHighlightedIndex(-1);
+    searchRef.current?.focus();
   }
 
   function changeQty(productId: number, qty: number) {
@@ -58,16 +129,17 @@ export default function CheckoutPage() {
     if (!product) return;
 
     if (qty <= 0) {
-      setCart((prev) => prev.filter((x) => x.productId !== productId));
+      removeFromCart(productId);
       return;
     }
 
     if (qty > product.stock_qty) {
-      setMessage(`Only ${product.stock_qty} left for ${product.name}`);
+      setInfo(`Only ${product.stock_qty} left for ${product.name}`);
       return;
     }
 
-    setMessage("");
+    clearMessage();
+
     setCart((prev) =>
       prev.map((x) =>
         x.productId === productId ? { ...x, quantity: qty } : x,
@@ -75,13 +147,75 @@ export default function CheckoutPage() {
     );
   }
 
+  function incrementQty(productId: number) {
+    const cartItem = cart.find((item) => item.productId === productId);
+    if (!cartItem) return;
+    changeQty(productId, cartItem.quantity + 1);
+  }
+
+  function decrementQty(productId: number) {
+    const cartItem = cart.find((item) => item.productId === productId);
+    if (!cartItem) return;
+    changeQty(productId, cartItem.quantity - 1);
+  }
+
+  function removeFromCart(productId: number) {
+    setCart((prev) => prev.filter((x) => x.productId !== productId));
+    clearMessage();
+    searchRef.current?.focus();
+  }
+
+  async function handleSearchSubmit() {
+    const code = searchInput.trim();
+
+    if (!code) return;
+
+    try {
+      const exactProduct = await window.posAPI.products.findBySku(code);
+
+      if (exactProduct) {
+        addToCart(exactProduct);
+        return;
+      }
+
+      const results = await window.posAPI.products.search(code);
+
+      if (results.length === 1) {
+        addToCart(results[0]);
+        return;
+      }
+
+      if (results.length > 0) {
+        setSuggestions(results);
+        setShowSuggestions(true);
+        setHighlightedIndex(0);
+        setInfo("Select a matching product from the dropdown.");
+        return;
+      }
+
+      setInfo(`No product found for: ${code}`);
+      setSuggestions([]);
+      setShowSuggestions(false);
+      setHighlightedIndex(-1);
+      searchRef.current?.focus();
+    } catch (error: any) {
+      setInfo(error.message || "Product lookup failed");
+      searchRef.current?.focus();
+    }
+  }
+
+  function handleSuggestionSelect(product: Product) {
+    addToCart(product);
+  }
+
   async function handleSeed() {
     try {
       await window.posAPI.dev.seedProducts();
       await loadProducts();
-      setMessage("Sample products added.");
+      setInfo("Sample products added.");
+      searchRef.current?.focus();
     } catch (error: any) {
-      setMessage(error.message || "Seeding failed");
+      setInfo(error.message || "Seeding failed");
     }
   }
 
@@ -98,103 +232,268 @@ export default function CheckoutPage() {
         discount: 0,
       });
 
-      setMessage(
+      setInfo(
         `Sale complete. Receipt: ${result.receiptNumber}. Change: ${result.changeDue}`,
       );
       setCart([]);
       setAmountPaid(0);
+      setSearchInput("");
+      setSuggestions([]);
+      setShowSuggestions(false);
+      setHighlightedIndex(-1);
       await loadProducts();
+      searchRef.current?.focus();
     } catch (error: any) {
-      setMessage(error.message || "Checkout failed");
+      setInfo(error.message || "Checkout failed");
     }
   }
 
+  const changeDue = Math.max(0, amountPaid - subtotal);
+
   return (
-    <div style={{ padding: 20 }}>
-      <h1>Checkout</h1>
-
-      <div style={{ marginBottom: 16 }}>
-        <button onClick={handleSeed}>Seed Sample Products</button>
-      </div>
-
-      <div style={{ display: "flex", gap: 24 }}>
-        <div style={{ flex: 1 }}>
-          <h2>Products</h2>
-          {products.length === 0 && <p>No products yet.</p>}
-
-          {products.map((product) => (
-            <div
-              key={product.id}
-              style={{
-                border: "1px solid #ccc",
-                marginBottom: 8,
-                padding: 10,
-                borderRadius: 8,
-              }}
-            >
-              <strong>{product.name}</strong>
-              <div>Category: {product.category || "-"}</div>
-              <div>Price: {product.price}</div>
-              <div>Stock: {product.stock_qty}</div>
-              <button
-                onClick={() => addToCart(product)}
-                disabled={product.stock_qty <= 0}
-              >
-                Add
-              </button>
-            </div>
-          ))}
+    <div className="checkout-page">
+      <header className="topbar">
+        <div>
+          <h1>WigsnStyle POS</h1>
+          <p className="muted">
+            Scan barcode or search by name, SKU, or category.
+          </p>
         </div>
 
-        <div style={{ flex: 1 }}>
-          <h2>Cart</h2>
-          {cart.length === 0 && <p>Cart is empty.</p>}
+        <div className="topbar-actions">
+          <button className="button secondary" onClick={handleSeed}>
+            Seed Sample Products
+          </button>
+        </div>
+      </header>
 
-          {cart.map((item) => (
-            <div key={item.productId} style={{ marginBottom: 10 }}>
-              <strong>{item.name}</strong>
-              <div>Price: {item.price}</div>
-              <div>
-                Qty:
-                <input
-                  type="number"
-                  value={item.quantity}
-                  min={1}
-                  onChange={(e) =>
-                    changeQty(item.productId, Number(e.target.value))
-                  }
-                  style={{ marginLeft: 8, width: 70 }}
-                />
-              </div>
-              <div>Line total: {item.price * item.quantity}</div>
+      <section className="scan-panel">
+        <div className="scan-input-wrap search-box" ref={searchBoxRef}>
+          <label htmlFor="productSearch" className="label">
+            Scan barcode / search product
+          </label>
+
+          <input
+            id="productSearch"
+            ref={searchRef}
+            className="input input-lg"
+            type="text"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onFocus={() => {
+              if (suggestions.length > 0) setShowSuggestions(true);
+            }}
+            onKeyDown={(e) => {
+              if (!showSuggestions || suggestions.length === 0) {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleSearchSubmit();
+                }
+                return;
+              }
+
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+                setHighlightedIndex((prev) =>
+                  prev < suggestions.length - 1 ? prev + 1 : prev,
+                );
+              } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : 0));
+              } else if (e.key === "Enter") {
+                e.preventDefault();
+
+                if (
+                  highlightedIndex >= 0 &&
+                  highlightedIndex < suggestions.length
+                ) {
+                  handleSuggestionSelect(suggestions[highlightedIndex]);
+                } else {
+                  handleSearchSubmit();
+                }
+              } else if (e.key === "Escape") {
+                setShowSuggestions(false);
+                setHighlightedIndex(-1);
+              }
+            }}
+            placeholder="Scan barcode or type product name"
+            autoComplete="off"
+          />
+
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="suggestions-dropdown">
+              {suggestions.map((product, index) => (
+                <button
+                  key={product.id}
+                  type="button"
+                  className={`suggestion-item ${
+                    index === highlightedIndex ? "active" : ""
+                  }`}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => handleSuggestionSelect(product)}
+                >
+                  <div className="suggestion-main">
+                    <strong>{product.name}</strong>
+                    <span className="suggestion-meta">
+                      SKU: {product.sku || "-"} · {product.category || "-"}
+                    </span>
+                  </div>
+                  <div className="suggestion-side">
+                    <span>KES {Number(product.price).toFixed(2)}</span>
+                    <span>Stock: {product.stock_qty}</span>
+                  </div>
+                </button>
+              ))}
             </div>
-          ))}
+          )}
+        </div>
 
-          <hr />
-          <div>Total: {total}</div>
+        <button className="button" onClick={handleSearchSubmit}>
+          Add
+        </button>
+      </section>
 
-          <div style={{ marginTop: 10 }}>
-            <label>
-              Amount paid:
+      {message && <div className="alert">{message}</div>}
+
+      <div className="checkout-grid">
+        <section className="panel products-panel">
+          <div className="panel-header">
+            <h2>Products</h2>
+            <span className="badge">{products.length} items</span>
+          </div>
+
+          <div className="product-list">
+            {products.length === 0 && <p className="empty">No products yet.</p>}
+
+            {products.map((product) => (
+              <article key={product.id} className="product-card">
+                <div className="product-main">
+                  <div className="product-title-row">
+                    <strong className="product-title">{product.name}</strong>
+                    <span
+                      className={`stock-pill ${product.stock_qty <= 0 ? "danger" : ""}`}
+                    >
+                      Stock: {product.stock_qty}
+                    </span>
+                  </div>
+
+                  <div className="product-meta">
+                    <span>Category: {product.category || "-"}</span>
+                    <span>SKU: {product.sku || "-"}</span>
+                    <span>KES {Number(product.price).toFixed(2)}</span>
+                  </div>
+                </div>
+
+                <button
+                  className="button"
+                  onClick={() => addToCart(product)}
+                  disabled={product.stock_qty <= 0}
+                >
+                  Add
+                </button>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="panel cart-panel">
+          <div className="panel-header">
+            <h2>Cart</h2>
+            <span className="badge">{totalItems} pcs</span>
+          </div>
+
+          <div className="cart-list">
+            {cart.length === 0 && <p className="empty">Cart is empty.</p>}
+
+            {cart.map((item) => (
+              <article key={item.productId} className="cart-card">
+                <div className="cart-main">
+                  <strong className="product-title">{item.name}</strong>
+                  <div className="product-meta">
+                    <span>SKU: {item.sku || "-"}</span>
+                    <span>KES {item.price.toFixed(2)} each</span>
+                  </div>
+                </div>
+
+                <div className="cart-controls">
+                  <div className="qty-control">
+                    <button
+                      className="qty-btn"
+                      onClick={() => decrementQty(item.productId)}
+                    >
+                      −
+                    </button>
+
+                    <input
+                      className="qty-input"
+                      type="number"
+                      value={item.quantity}
+                      min={1}
+                      onChange={(e) =>
+                        changeQty(item.productId, Number(e.target.value))
+                      }
+                    />
+
+                    <button
+                      className="qty-btn"
+                      onClick={() => incrementQty(item.productId)}
+                    >
+                      +
+                    </button>
+                  </div>
+
+                  <div className="line-total">
+                    KES {(item.price * item.quantity).toFixed(2)}
+                  </div>
+
+                  <button
+                    className="button danger"
+                    onClick={() => removeFromCart(item.productId)}
+                  >
+                    Remove
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="summary-card">
+            <div className="summary-row">
+              <span>Items</span>
+              <strong>{totalItems}</strong>
+            </div>
+
+            <div className="summary-row">
+              <span>Total</span>
+              <strong>KES {subtotal.toFixed(2)}</strong>
+            </div>
+
+            <div className="summary-row">
+              <label htmlFor="amountPaid">Amount paid</label>
               <input
+                id="amountPaid"
+                className="input"
                 type="number"
                 value={amountPaid}
                 onChange={(e) => setAmountPaid(Number(e.target.value))}
-                style={{ marginLeft: 8 }}
+                min={0}
               />
-            </label>
+            </div>
+
+            <div className="summary-row">
+              <span>Change</span>
+              <strong>KES {changeDue.toFixed(2)}</strong>
+            </div>
+
+            <button
+              className="button checkout-button"
+              onClick={handleCheckout}
+              disabled={cart.length === 0}
+            >
+              Complete Sale
+            </button>
           </div>
-
-          <button
-            onClick={handleCheckout}
-            disabled={cart.length === 0}
-            style={{ marginTop: 16 }}
-          >
-            Complete Sale
-          </button>
-
-          {message && <p style={{ marginTop: 16 }}>{message}</p>}
-        </div>
+        </section>
       </div>
     </div>
   );

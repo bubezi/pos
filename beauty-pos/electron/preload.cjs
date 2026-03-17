@@ -6,6 +6,8 @@ contextBridge.exposeInMainWorld('posAPI', {
     list: () => ipcRenderer.invoke('products:list'),
     create: (product) => ipcRenderer.invoke('products:create', product),
     updateStock: (payload) => ipcRenderer.invoke('products:updateStock', payload),
+    findBySku: (sku) => ipcRenderer.invoke('products:findBySku', sku),
+    search: (term) => ipcRenderer.invoke('products:search', term),
   },
   checkout: {
     completeSale: (payload) => ipcRenderer.invoke('checkout:completeSale', payload),

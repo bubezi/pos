@@ -1,0 +1,387 @@
+.checkout-page {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  text-align: left;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.topbar h1 {
+  margin: 0 0 6px;
+  font-size: 34px;
+}
+
+.muted {
+  color: var(--text);
+  opacity: 0.85;
+}
+
+.topbar-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.scan-panel {
+  display: flex;
+  gap: 12px;
+  align-items: end;
+  flex-wrap: wrap;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--social-bg);
+  box-shadow: var(--shadow);
+}
+
+.scan-input-wrap {
+  flex: 1;
+  min-width: 260px;
+}
+
+.label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+.input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font: inherit;
+  background: var(--bg);
+  color: var(--text-h);
+  outline: none;
+}
+
+.input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+
+.input-lg {
+  padding: 14px 16px;
+  font-size: 18px;
+}
+
+.button {
+  border: 1px solid var(--accent-border);
+  background: var(--accent);
+  color: white;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+
+.button:hover {
+  opacity: 0.95;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.button.secondary {
+  background: transparent;
+  color: var(--text-h);
+  border-color: var(--border);
+}
+
+.button.danger {
+  background: #d64545;
+  border-color: #d64545;
+}
+
+.alert {
+  border: 1px solid var(--accent-border);
+  background: var(--accent-bg);
+  color: var(--text-h);
+  padding: 14px 16px;
+  border-radius: 14px;
+}
+
+.checkout-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 20px;
+  min-height: 0;
+}
+
+.panel {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 18px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.panel-header h2 {
+  margin: 0;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--accent-bg);
+  color: var(--text-h);
+  border: 1px solid var(--accent-border);
+  font-size: 14px;
+}
+
+.product-list,
+.cart-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.product-card,
+.cart-card {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+  background: var(--bg);
+}
+
+.product-main,
+.cart-main {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.product-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.product-title {
+  color: var(--text-h);
+  font-size: 18px;
+}
+
+.product-meta {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.stock-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.12);
+  color: #15803d;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.stock-pill.danger {
+  background: rgba(220, 38, 38, 0.12);
+  color: #dc2626;
+}
+
+.cart-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.qty-control {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.qty-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-h);
+  font: inherit;
+  width: 38px;
+  height: 38px;
+  cursor: pointer;
+}
+
+.qty-input {
+  width: 60px;
+  border: none;
+  border-inline: 1px solid var(--border);
+  text-align: center;
+  font: inherit;
+  background: transparent;
+  color: var(--text-h);
+  padding: 8px;
+}
+
+.qty-input:focus {
+  outline: none;
+}
+
+.line-total {
+  min-width: 120px;
+  text-align: right;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.summary-card {
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.checkout-button {
+  width: 100%;
+  margin-top: 4px;
+  padding-block: 14px;
+  font-size: 17px;
+}
+
+.empty {
+  padding: 20px;
+  text-align: center;
+  border: 1px dashed var(--border);
+  border-radius: 14px;
+  color: var(--text);
+}
+
+@media (max-width: 960px) {
+  .checkout-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .product-card,
+  .cart-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cart-controls {
+    justify-content: flex-start;
+  }
+
+  .line-total {
+    text-align: left;
+    min-width: unset;
+  }
+}
+
+.search-box {
+  position: relative;
+}
+
+.suggestions-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.suggestion-item {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: inherit;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+  padding: 12px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover,
+.suggestion-item.active {
+  background: var(--accent-bg);
+}
+
+.suggestion-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.suggestion-main strong {
+  color: var(--text-h);
+}
+
+.suggestion-meta {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.suggestion-side {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+  font-size: 13px;
+  color: var(--text-h);
+  white-space: nowrap;
+}
