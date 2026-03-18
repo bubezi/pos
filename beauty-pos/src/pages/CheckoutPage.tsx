@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import "../styles/checkout.css";
 
 type LastSale = {
+  saleId: number;
   receiptNumber: string;
   changeDue: number;
   total: number;
@@ -228,10 +229,11 @@ export default function CheckoutPage() {
       });
 
       setLastSale({
+        saleId: result.saleId,
         receiptNumber: result.receiptNumber,
         changeDue: result.changeDue,
-        total: subtotal,
-        amountPaid: amountPaidValue,
+        total: result.total,
+        amountPaid: result.amountPaid,
       });
 
       setInfo(
@@ -250,18 +252,41 @@ export default function CheckoutPage() {
     }
   }
 
-  function handleViewReceipt() {
+  async function handleViewReceipt() {
     if (!lastSale) return;
 
-    // Replace this with your actual receipt viewer API if you already have one.
-    setInfo(`Open receipt ${lastSale.receiptNumber} from your receipt module.`);
+    try {
+      await window.posAPI.receipts.preview(lastSale.saleId);
+    } catch (error: any) {
+      setInfo(error.message || "Failed to preview receipt");
+    }
   }
 
-  function handlePrintReceipt() {
+  async function handlePrintReceipt() {
     if (!lastSale) return;
 
-    // Replace this with your actual print API if you already have one.
-    window.print();
+    try {
+      await window.posAPI.receipts.print(lastSale.saleId);
+      setInfo(`Printing receipt ${lastSale.receiptNumber}...`);
+    } catch (error: any) {
+      setInfo(error.message || "Failed to print receipt");
+    }
+  }
+
+  async function handleSavePdf() {
+    if (!lastSale) return;
+
+    try {
+      const result = await window.posAPI.receipts.savePdf(lastSale.saleId);
+
+      if (result.success) {
+        setInfo(
+          `Receipt saved as PDF${result.filePath ? `: ${result.filePath}` : ""}`,
+        );
+      }
+    } catch (error: any) {
+      setInfo(error.message || "Failed to save receipt as PDF");
+    }
   }
 
   return (
@@ -502,18 +527,26 @@ export default function CheckoutPage() {
             <div className="receipt-actions">
               <button
                 className="button secondary"
-                onClick={handleViewReceipt}
+                onClick={() => void handleViewReceipt()}
                 disabled={!lastSale}
               >
-                View Receipt
+                Preview Receipt
               </button>
 
               <button
                 className="button"
-                onClick={handlePrintReceipt}
+                onClick={() => void handlePrintReceipt()}
                 disabled={!lastSale}
               >
                 Print Receipt
+              </button>
+
+              <button
+                className="button secondary"
+                onClick={() => void handleSavePdf()}
+                disabled={!lastSale}
+              >
+                Save PDF
               </button>
             </div>
           </div>

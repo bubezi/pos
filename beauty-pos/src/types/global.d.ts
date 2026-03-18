@@ -29,6 +29,11 @@ declare global {
       receipts: {
         getBySaleId: (saleId: number) => Promise<ReceiptInfo | null>;
         markPrinted: (saleId: number) => Promise<{ success: boolean }>;
+        preview: (saleId: number) => Promise<{ success: boolean }>;
+        print: (saleId: number) => Promise<{ success: boolean }>;
+        savePdf: (
+          saleId: number,
+        ) => Promise<{ success: boolean; filePath?: string }>;
       };
       sales: {
         list: (filters?: SalesListFilters) => Promise<SalesListResponse>;
@@ -132,5 +137,39 @@ declare global {
       total: number;
       totalPages: number;
     };
+  }
+
+  interface ReceiptSale {
+    id: number;
+    receipt_number: string;
+    subtotal: number;
+    discount: number;
+    total: number;
+    amount_paid: number;
+    change_due: number;
+    payment_method: string;
+    cashier_name?: string | null;
+    notes?: string | null;
+    created_at: string;
+  }
+
+  interface ReceiptSaleItem {
+    product_id: number;
+    product_name_snapshot: string;
+    unit_price: number;
+    quantity: number;
+    line_total: number;
+  }
+
+  interface ReceiptInfo {
+    sale_id: number;
+    printed_at?: string | null;
+    print_count: number;
+  }
+
+  interface ReceiptData {
+    sale: ReceiptSale | null;
+    items: ReceiptSaleItem[];
+    receipt: ReceiptInfo | null;
   }
 }

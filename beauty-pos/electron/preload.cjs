@@ -23,6 +23,9 @@ contextBridge.exposeInMainWorld("posAPI", {
   receipts: {
     getBySaleId: (saleId) => ipcRenderer.invoke("receipts:getBySaleId", saleId),
     markPrinted: (saleId) => ipcRenderer.invoke("receipts:markPrinted", saleId),
+    preview: (saleId) => ipcRenderer.invoke("receipts:preview", saleId),
+    print: (saleId) => ipcRenderer.invoke("receipts:print", saleId),
+    savePdf: (saleId) => ipcRenderer.invoke("receipts:savePdf", saleId),
   },
   sales: {
     list: (filters) => ipcRenderer.invoke("sales:list", filters),

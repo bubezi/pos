@@ -99,6 +99,46 @@ export default function SalesHistoryPage() {
     }, 0);
   }
 
+  async function handleViewReceipt() {
+    if (!selectedSale) return;
+
+    try {
+      setMessage("");
+      await window.posAPI.receipts.preview(selectedSale.id);
+    } catch (error: any) {
+      setMessage(error.message || "Failed to preview receipt");
+    }
+  }
+
+  async function handlePrintReceipt() {
+    if (!selectedSale) return;
+
+    try {
+      setMessage("");
+      await window.posAPI.receipts.print(selectedSale.id);
+      setMessage(`Printing receipt ${selectedSale.receipt_number}...`);
+    } catch (error: any) {
+      setMessage(error.message || "Failed to print receipt");
+    }
+  }
+
+  async function handleSavePdf() {
+    if (!selectedSale) return;
+
+    try {
+      setMessage("");
+      const result = await window.posAPI.receipts.savePdf(selectedSale.id);
+
+      if (result.success) {
+        setMessage(
+          `Receipt saved as PDF${result.filePath ? `: ${result.filePath}` : ""}`,
+        );
+      }
+    } catch (error: any) {
+      setMessage(error.message || "Failed to save receipt as PDF");
+    }
+  }
+
   return (
     <div className="sales-history-page">
       <div className="page-header">
@@ -291,6 +331,34 @@ export default function SalesHistoryPage() {
                 <div>
                   <label>Print Count</label>
                   <div>{selectedSale.receipt?.print_count ?? 0}</div>
+                </div>
+              </div>
+
+              <div className="receipt-actions">
+                <div className="receipt-actions">
+                  <button
+                    className="button secondary"
+                    onClick={() => void handleViewReceipt()}
+                    disabled={!selectedSale}
+                  >
+                    Preview Receipt
+                  </button>
+
+                  <button
+                    className="button"
+                    onClick={() => void handlePrintReceipt()}
+                    disabled={!selectedSale}
+                  >
+                    Print Receipt
+                  </button>
+
+                  <button
+                    className="button secondary"
+                    onClick={() => void handleSavePdf()}
+                    disabled={!selectedSale}
+                  >
+                    Save PDF
+                  </button>
                 </div>
               </div>
 

@@ -305,6 +305,17 @@
   color: var(--text-h);
 }
 
+.receipt-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.button.secondary {
+  background: transparent;
+  border: 1px solid currentColor;
+}
+
 @media (max-width: 1100px) {
   .sales-history-layout {
     grid-template-columns: 1fr;
@@ -316,6 +327,16 @@
 
   .totals-card {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .checkout-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .receipt-actions {
+    flex-direction: column;
   }
 }
 
