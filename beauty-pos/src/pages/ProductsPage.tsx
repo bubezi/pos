@@ -11,7 +11,12 @@ type ProductFormState = {
   reorder_level: string;
 };
 
-type StatusFilter = "all" | "active" | "inactive";
+type StatusFilter =
+  | "all"
+  | "active"
+  | "inactive"
+  | "low-stock"
+  | "out-of-stock";
 
 const emptyForm: ProductFormState = {
   id: null,
@@ -35,6 +40,18 @@ export default function ProductsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
+  function isOutOfStock(product: Product) {
+    return product.is_active === 1 && Number(product.stock_qty) <= 0;
+  }
+
+  function isLowStock(product: Product) {
+    return (
+      product.is_active === 1 &&
+      Number(product.reorder_level) > 0 &&
+      Number(product.stock_qty) > 0 &&
+      Number(product.stock_qty) <= Number(product.reorder_level)
+    );
+  }
   async function loadProducts() {
     try {
       const data = await window.posAPI.products.getAll();
@@ -65,14 +82,75 @@ export default function ProductsPage() {
           .toLowerCase()
           .includes(term);
 
+      const isOutOfStock =
+        product.is_active === 1 && Number(product.stock_qty) <= 0;
+
+      const isLowStock =
+        product.is_active === 1 &&
+        Number(product.reorder_level) > 0 &&
+        Number(product.stock_qty) > 0 &&
+        Number(product.stock_qty) <= Number(product.reorder_level);
+
       const matchesStatus =
         statusFilter === "all" ||
         (statusFilter === "active" && product.is_active === 1) ||
-        (statusFilter === "inactive" && product.is_active === 0);
+        (statusFilter === "inactive" && product.is_active === 0) ||
+        (statusFilter === "low-stock" && isLowStock) ||
+        (statusFilter === "out-of-stock" && isOutOfStock);
 
       return matchesSearch && matchesStatus;
     });
   }, [products, search, statusFilter]);
+
+  const lowStockProducts = useMemo(() => {
+    return products.filter(isLowStock);
+  }, [products]);
+
+  const dashboardStats = useMemo(() => {
+    const totalProducts = products.length;
+
+    const activeProducts = products.filter(
+      (product) => product.is_active === 1,
+    ).length;
+
+    const inactiveProducts = products.filter(
+      (product) => product.is_active === 0,
+    ).length;
+
+    const lowStockCount = products.filter(
+      (product) =>
+        product.is_active === 1 &&
+        Number(product.reorder_level) > 0 &&
+        Number(product.stock_qty) > 0 &&
+        Number(product.stock_qty) <= Number(product.reorder_level),
+    ).length;
+
+    const outOfStockCount = products.filter(
+      (product) => product.is_active === 1 && Number(product.stock_qty) <= 0,
+    ).length;
+
+    const totalUnits = products
+      .filter((product) => product.is_active === 1)
+      .reduce((sum, product) => sum + Number(product.stock_qty || 0), 0);
+
+    const inventoryValue = products
+      .filter((product) => product.is_active === 1)
+      .reduce(
+        (sum, product) =>
+          sum + Number(product.price || 0) * Number(product.stock_qty || 0),
+        0,
+      );
+
+    return {
+      totalProducts,
+      activeProducts,
+      inactiveProducts,
+      lowStockCount,
+      outOfStockCount,
+      totalUnits,
+      inventoryValue,
+    };
+  }, [products]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -236,6 +314,8 @@ export default function ProductsPage() {
               <option value="all">All</option>
               <option value="active">Active only</option>
               <option value="inactive">Inactive only</option>
+              <option value="low-stock">Low stock</option>
+              <option value="out-of-stock">Out of stock</option>
             </select>
 
             <input
@@ -247,7 +327,70 @@ export default function ProductsPage() {
           </div>
         </div>
 
+        <div className="products-dashboard">
+          <div className="dashboard-card">
+            <span className="dashboard-label">Total Products</span>
+            <strong className="dashboard-value">
+              {dashboardStats.totalProducts}
+            </strong>
+          </div>
+
+          <div className="dashboard-card">
+            <span className="dashboard-label">Active</span>
+            <strong className="dashboard-value">
+              {dashboardStats.activeProducts}
+            </strong>
+          </div>
+
+          <div className="dashboard-card">
+            <span className="dashboard-label">Inactive</span>
+            <strong className="dashboard-value">
+              {dashboardStats.inactiveProducts}
+            </strong>
+          </div>
+
+          <div className="dashboard-card warning">
+            <span className="dashboard-label">Low Stock</span>
+            <strong className="dashboard-value">
+              {dashboardStats.lowStockCount}
+            </strong>
+          </div>
+
+          <div className="dashboard-card danger">
+            <span className="dashboard-label">Out of Stock</span>
+            <strong className="dashboard-value">
+              {dashboardStats.outOfStockCount}
+            </strong>
+          </div>
+
+          <div className="dashboard-card">
+            <span className="dashboard-label">Units in Stock</span>
+            <strong className="dashboard-value">
+              {dashboardStats.totalUnits}
+            </strong>
+          </div>
+
+          <div className="dashboard-card">
+            <span className="dashboard-label">Inventory Value</span>
+            <strong className="dashboard-value">
+              KES {dashboardStats.inventoryValue.toFixed(2)}
+            </strong>
+          </div>
+        </div>
+
         {message && <div className="alert">{message}</div>}
+        {lowStockProducts.length > 0 && (
+          <div className="alert alert-warning">
+            {lowStockProducts.length} product
+            {lowStockProducts.length === 1 ? "" : "s"} running low on stock.
+          </div>
+        )}
+        {dashboardStats.outOfStockCount > 0 && (
+          <div className="alert alert-danger">
+            {dashboardStats.outOfStockCount} product
+            {dashboardStats.outOfStockCount === 1 ? "" : "s"} are out of stock.
+          </div>
+        )}
 
         <div className="products-table-wrap">
           <table className="products-table">
@@ -273,12 +416,33 @@ export default function ProductsPage() {
                 </tr>
               ) : (
                 paginatedProducts.map((product) => (
-                  <tr key={product.id}>
+                  <tr
+                    key={product.id}
+                    className={
+                      isOutOfStock(product)
+                        ? "out-of-stock-row"
+                        : isLowStock(product)
+                          ? "low-stock-row"
+                          : ""
+                    }
+                  >
                     <td>{product.name}</td>
                     <td>{product.sku || "-"}</td>
                     <td>{product.category || "-"}</td>
                     <td>KES {Number(product.price).toFixed(2)}</td>
-                    <td>{product.stock_qty}</td>
+                    <td>
+                      <div className="stock-cell">
+                        <span>{product.stock_qty}</span>
+
+                        {isOutOfStock(product) ? (
+                          <span className="out-of-stock-badge">
+                            Out of stock
+                          </span>
+                        ) : isLowStock(product) ? (
+                          <span className="low-stock-badge">Low stock</span>
+                        ) : null}
+                      </div>
+                    </td>
                     <td>{product.reorder_level}</td>
                     <td>
                       <span
