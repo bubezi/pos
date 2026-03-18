@@ -43,7 +43,11 @@ declare global {
         login: (payload: {
           username: string;
           password: string;
-        }) => Promise<{ success: boolean; user: AuthUser }>;
+        }) => Promise<{
+          success: boolean;
+          user: AuthUser;
+          mustChangePassword: boolean;
+        }>;
         logout: () => Promise<{ success: boolean }>;
         getSession: () => Promise<AuthUser | null>;
         changePassword: (payload: {
@@ -215,5 +219,6 @@ declare global {
     is_active: number;
     created_at: string;
     updated_at: string;
+    must_change_password: boolean;
   }
 }

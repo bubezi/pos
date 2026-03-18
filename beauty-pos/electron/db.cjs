@@ -92,8 +92,15 @@ function ensureDefaultAdmin() {
 
   db.prepare(
     `
-    INSERT INTO users (full_name, username, password_hash, role, is_active)
-    VALUES (?, ?, ?, ?, 1)
+    INSERT INTO users (
+      full_name,
+      username,
+      password_hash,
+      role,
+      is_active,
+      must_change_password
+    )
+    VALUES (?, ?, ?, ?, 1, 1)
   `,
   ).run("System Admin", username, passwordHash, "admin");
 

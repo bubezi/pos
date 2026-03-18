@@ -5,7 +5,15 @@ type AuthContextValue = {
   loading: boolean;
   isAuthenticated: boolean;
   isAdmin: boolean;
-  login: (username: string, password: string) => Promise<void>;
+  mustChangePassword: boolean;
+  login: (
+    username: string,
+    password: string,
+  ) => Promise<{
+    success: boolean;
+    user: AuthUser;
+    mustChangePassword: boolean;
+  }>;
   logout: () => Promise<void>;
 };
 
@@ -21,15 +29,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async function loadSession() {
       try {
         const session = await window.posAPI.auth.getSession();
-        if (mounted) setUser(session);
+        if (mounted) {
+          setUser(session);
+        }
       } catch (error) {
         console.error(error);
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     }
 
-    loadSession();
+    void loadSession();
 
     return () => {
       mounted = false;
@@ -39,19 +51,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   async function login(username: string, password: string) {
     const result = await window.posAPI.auth.login({ username, password });
     setUser(result.user);
+    return result;
   }
 
   async function logout() {
     await window.posAPI.auth.logout();
     setUser(null);
   }
-
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
       loading,
       isAuthenticated: !!user,
       isAdmin: user?.role === "admin",
+      mustChangePassword: !!user?.must_change_password,
       login,
       logout,
     }),
@@ -63,8 +76,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
+
   if (!context) {
     throw new Error("useAuth must be used inside AuthProvider");
   }
+
   return context;
 }

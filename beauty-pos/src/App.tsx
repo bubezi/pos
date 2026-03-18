@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CheckoutPage from "./pages/CheckoutPage";
 import ProductsPage from "./pages/ProductsPage";
 import SalesHistoryPage from "./pages/SalesHistoryPage";
@@ -15,6 +15,14 @@ function App() {
   const [page, setPage] = useState<Page>("checkout");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
+  const mustChangePassword = Boolean(user?.must_change_password);
+
+  useEffect(() => {
+    if (mustChangePassword && page !== "account") {
+      setPage("account");
+    }
+  }, [mustChangePassword, page]);
+
   if (loading) {
     return <div className="app-loading">Loading...</div>;
   }
@@ -23,8 +31,9 @@ function App() {
     return <LoginPage />;
   }
 
-  const visiblePage =
-    page === "products" && !isAdmin
+  const visiblePage = mustChangePassword
+    ? "account"
+    : page === "products" && !isAdmin
       ? "checkout"
       : page === "sales" && !isAdmin
         ? "checkout"
@@ -62,48 +71,58 @@ function App() {
         </div>
 
         <nav className="sidebar-nav">
-          <button
-            className={`nav-button ${visiblePage === "checkout" ? "active" : ""}`}
-            onClick={() => setPage("checkout")}
-            title="Checkout"
-          >
-            <span className="nav-icon">🛒</span>
-            {!sidebarCollapsed && <span className="nav-label">Checkout</span>}
-          </button>
+          {!mustChangePassword && (
+            <>
+              <button
+                className={`nav-button ${visiblePage === "checkout" ? "active" : ""}`}
+                onClick={() => setPage("checkout")}
+                title="Checkout"
+              >
+                <span className="nav-icon">🛒</span>
+                {!sidebarCollapsed && (
+                  <span className="nav-label">Checkout</span>
+                )}
+              </button>
 
-          {isAdmin && (
-            <button
-              className={`nav-button ${visiblePage === "products" ? "active" : ""}`}
-              onClick={() => setPage("products")}
-              title="Products"
-            >
-              <span className="nav-icon">📦</span>
-              {!sidebarCollapsed && <span className="nav-label">Products</span>}
-            </button>
-          )}
-
-          {isAdmin && (
-            <button
-              className={`nav-button ${visiblePage === "sales" ? "active" : ""}`}
-              onClick={() => setPage("sales")}
-              title="Sales History"
-            >
-              <span className="nav-icon">🧾</span>
-              {!sidebarCollapsed && (
-                <span className="nav-label">Sales History</span>
+              {isAdmin && (
+                <button
+                  className={`nav-button ${visiblePage === "products" ? "active" : ""}`}
+                  onClick={() => setPage("products")}
+                  title="Products"
+                >
+                  <span className="nav-icon">📦</span>
+                  {!sidebarCollapsed && (
+                    <span className="nav-label">Products</span>
+                  )}
+                </button>
               )}
-            </button>
-          )}
 
-          {isAdmin && (
-            <button
-              className={`nav-button ${visiblePage === "users" ? "active" : ""}`}
-              onClick={() => setPage("users")}
-              title="Users"
-            >
-              <span className="nav-icon">👥</span>
-              {!sidebarCollapsed && <span className="nav-label">Users</span>}
-            </button>
+              {isAdmin && (
+                <button
+                  className={`nav-button ${visiblePage === "sales" ? "active" : ""}`}
+                  onClick={() => setPage("sales")}
+                  title="Sales History"
+                >
+                  <span className="nav-icon">🧾</span>
+                  {!sidebarCollapsed && (
+                    <span className="nav-label">Sales History</span>
+                  )}
+                </button>
+              )}
+
+              {isAdmin && (
+                <button
+                  className={`nav-button ${visiblePage === "users" ? "active" : ""}`}
+                  onClick={() => setPage("users")}
+                  title="Users"
+                >
+                  <span className="nav-icon">👥</span>
+                  {!sidebarCollapsed && (
+                    <span className="nav-label">Users</span>
+                  )}
+                </button>
+              )}
+            </>
           )}
 
           <button
@@ -112,7 +131,11 @@ function App() {
             title="Change Password"
           >
             <span className="nav-icon">🔐</span>
-            {!sidebarCollapsed && <span className="nav-label">Account</span>}
+            {!sidebarCollapsed && (
+              <span className="nav-label">
+                {mustChangePassword ? "Change Password Required" : "Account"}
+              </span>
+            )}
           </button>
         </nav>
 
@@ -127,6 +150,11 @@ function App() {
                   <div className="sidebar-user-role">
                     {user?.role === "admin" ? "Administrator" : "Cashier"}
                   </div>
+                  {mustChangePassword && (
+                    <div className="sidebar-user-role">
+                      Default password must be changed
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -158,10 +186,16 @@ function App() {
       </aside>
 
       <main className="main-content">
-        {visiblePage === "checkout" && <CheckoutPage />}
-        {visiblePage === "products" && isAdmin && <ProductsPage />}
-        {visiblePage === "sales" && isAdmin && <SalesHistoryPage />}
-        {visiblePage === "users" && isAdmin && <UsersPage />}
+        {visiblePage === "checkout" && !mustChangePassword && <CheckoutPage />}
+        {visiblePage === "products" && isAdmin && !mustChangePassword && (
+          <ProductsPage />
+        )}
+        {visiblePage === "sales" && isAdmin && !mustChangePassword && (
+          <SalesHistoryPage />
+        )}
+        {visiblePage === "users" && isAdmin && !mustChangePassword && (
+          <UsersPage />
+        )}
         {visiblePage === "account" && <ChangePasswordPage />}
       </main>
     </div>

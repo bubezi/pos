@@ -13,9 +13,16 @@ function sanitizeUser(user) {
     username: user.username,
     role: user.role,
     is_active: user.is_active,
+    must_change_password: user.must_change_password,
     created_at: user.created_at,
     updated_at: user.updated_at,
   };
+}
+
+function normalizeUsername(username) {
+  return String(username || "")
+    .trim()
+    .toLowerCase();
 }
 
 function requireAuth() {
@@ -33,12 +40,65 @@ function requireAdmin() {
   return session;
 }
 
+function getUserById(id) {
+  return db
+    .prepare(
+      `
+      SELECT *
+      FROM users
+      WHERE id = ?
+      LIMIT 1
+    `,
+    )
+    .get(id);
+}
+
+function countActiveAdminsExcludingUser(excludedUserId = null) {
+  if (excludedUserId) {
+    const row = db
+      .prepare(
+        `
+        SELECT COUNT(*) AS count
+        FROM users
+        WHERE role = 'admin'
+          AND is_active = 1
+          AND id != ?
+      `,
+      )
+      .get(excludedUserId);
+
+    return row.count;
+  }
+
+  const row = db
+    .prepare(
+      `
+      SELECT COUNT(*) AS count
+      FROM users
+      WHERE role = 'admin'
+        AND is_active = 1
+    `,
+    )
+    .get();
+
+  return row.count;
+}
+
+function isDuplicateUsernameError(error) {
+  return (
+    error &&
+    typeof error.message === "string" &&
+    error.message.includes("UNIQUE constraint failed")
+  );
+}
+
 function registerAuthHandlers() {
   ipcMain.handle("auth:login", async (_, payload) => {
-    const username = String(payload?.username || "").trim();
+    const usernameInput = String(payload?.username || "");
     const password = String(payload?.password || "");
+    const normalizedUsername = normalizeUsername(usernameInput);
 
-    if (!username || !password) {
+    if (!normalizedUsername || !password) {
       throw new Error("Username and password are required");
     }
 
@@ -47,11 +107,11 @@ function registerAuthHandlers() {
         `
         SELECT *
         FROM users
-        WHERE username = ?
+        WHERE LOWER(TRIM(username)) = ?
         LIMIT 1
       `,
       )
-      .get(username);
+      .get(normalizedUsername);
 
     if (!user || !user.is_active) {
       throw new Error("Invalid username or password");
@@ -67,6 +127,7 @@ function registerAuthHandlers() {
     return {
       success: true,
       user: currentSession,
+      must_change_password: !!user.must_change_password,
     };
   });
 
@@ -85,7 +146,15 @@ function registerAuthHandlers() {
     const users = db
       .prepare(
         `
-        SELECT id, full_name, username, role, is_active, created_at, updated_at
+        SELECT
+          id,
+          full_name,
+          username,
+          role,
+          is_active,
+          must_change_password,
+          created_at,
+          updated_at
         FROM users
         ORDER BY id DESC
       `,
@@ -99,7 +168,9 @@ function registerAuthHandlers() {
     requireAdmin();
 
     const fullName = String(payload?.fullName || "").trim();
-    const username = String(payload?.username || "").trim();
+    const usernameRaw = String(payload?.username || "");
+    const username = usernameRaw.trim();
+    const normalizedUsername = normalizeUsername(usernameRaw);
     const password = String(payload?.password || "");
     const role = String(payload?.role || "").trim();
 
@@ -111,9 +182,20 @@ function registerAuthHandlers() {
       throw new Error("Invalid role");
     }
 
+    if (password.length < 4) {
+      throw new Error("Password must be at least 4 characters");
+    }
+
     const existing = db
-      .prepare("SELECT id FROM users WHERE username = ? LIMIT 1")
-      .get(username);
+      .prepare(
+        `
+        SELECT id
+        FROM users
+        WHERE LOWER(TRIM(username)) = ?
+        LIMIT 1
+      `,
+      )
+      .get(normalizedUsername);
 
     if (existing) {
       throw new Error("Username already exists");
@@ -121,29 +203,45 @@ function registerAuthHandlers() {
 
     const passwordHash = hashPassword(password);
 
-    const result = db
-      .prepare(
-        `
-        INSERT INTO users (full_name, username, password_hash, role)
-        VALUES (?, ?, ?, ?)
-      `,
-      )
-      .run(fullName, username, passwordHash, role);
+    try {
+      const result = db
+        .prepare(
+          `
+          INSERT INTO users (
+            full_name,
+            username,
+            password_hash,
+            role,
+            is_active,
+            must_change_password
+          )
+          VALUES (?, ?, ?, ?, 1, 0)
+        `,
+        )
+        .run(fullName, username, passwordHash, role);
 
-    return {
-      success: true,
-      id: result.lastInsertRowid,
-    };
+      return {
+        success: true,
+        id: result.lastInsertRowid,
+      };
+    } catch (error) {
+      if (isDuplicateUsernameError(error)) {
+        throw new Error("Username already exists");
+      }
+      throw error;
+    }
   });
 
   ipcMain.handle("users:update", async (_, payload) => {
-    requireAdmin();
+    const session = requireAdmin();
 
     const id = Number(payload?.id);
     const fullName = String(payload?.fullName || "").trim();
-    const username = String(payload?.username || "").trim();
+    const usernameRaw = String(payload?.username || "");
+    const username = usernameRaw.trim();
+    const normalizedUsername = normalizeUsername(usernameRaw);
     const role = String(payload?.role || "").trim();
-    const isActive = Number(payload?.isActive ? 1 : 0);
+    const isActive = payload?.isActive ? 1 : 0;
 
     if (!id || !fullName || !username || !role) {
       throw new Error("Missing required fields");
@@ -153,19 +251,67 @@ function registerAuthHandlers() {
       throw new Error("Invalid role");
     }
 
-    db.prepare(
-      `
-      UPDATE users
-      SET full_name = ?,
-          username = ?,
-          role = ?,
-          is_active = ?,
-          updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `,
-    ).run(fullName, username, role, isActive, id);
+    const existingUser = getUserById(id);
+    if (!existingUser) {
+      throw new Error("User not found");
+    }
 
-    return { success: true };
+    const conflictingUser = db
+      .prepare(
+        `
+        SELECT id
+        FROM users
+        WHERE LOWER(TRIM(username)) = ?
+          AND id != ?
+        LIMIT 1
+      `,
+      )
+      .get(normalizedUsername, id);
+
+    if (conflictingUser) {
+      throw new Error("Username already exists");
+    }
+
+    if (session.id === id && isActive === 0) {
+      throw new Error("You cannot deactivate your own account");
+    }
+
+    const willBeAdmin = role === "admin";
+    const willBeActive = isActive === 1;
+    const currentlyOnlyActiveAdmin =
+      existingUser.role === "admin" &&
+      existingUser.is_active === 1 &&
+      countActiveAdminsExcludingUser(id) === 0;
+
+    if (currentlyOnlyActiveAdmin && (!willBeAdmin || !willBeActive)) {
+      throw new Error("You cannot remove or deactivate the last active admin");
+    }
+
+    try {
+      db.prepare(
+        `
+        UPDATE users
+        SET full_name = ?,
+            username = ?,
+            role = ?,
+            is_active = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `,
+      ).run(fullName, username, role, isActive, id);
+
+      if (currentSession && currentSession.id === id) {
+        const freshUser = getUserById(id);
+        currentSession = sanitizeUser(freshUser);
+      }
+
+      return { success: true };
+    } catch (error) {
+      if (isDuplicateUsernameError(error)) {
+        throw new Error("Username already exists");
+      }
+      throw error;
+    }
   });
 
   ipcMain.handle("users:change-password", async (_, payload) => {
@@ -178,16 +324,31 @@ function registerAuthHandlers() {
       throw new Error("User ID and new password are required");
     }
 
+    if (newPassword.length < 4) {
+      throw new Error("New password must be at least 4 characters");
+    }
+
+    const user = getUserById(id);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
     const passwordHash = hashPassword(newPassword);
 
     db.prepare(
       `
       UPDATE users
       SET password_hash = ?,
+          must_change_password = 0,
           updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `,
     ).run(passwordHash, id);
+
+    if (currentSession && currentSession.id === id) {
+      const freshUser = getUserById(id);
+      currentSession = sanitizeUser(freshUser);
+    }
 
     return { success: true };
   });
@@ -209,11 +370,11 @@ function registerAuthHandlers() {
     const user = db
       .prepare(
         `
-    SELECT *
-    FROM users
-    WHERE id = ?
-    LIMIT 1
-  `,
+        SELECT *
+        FROM users
+        WHERE id = ?
+        LIMIT 1
+      `,
       )
       .get(session.id);
 
@@ -230,14 +391,21 @@ function registerAuthHandlers() {
 
     db.prepare(
       `
-    UPDATE users
-    SET password_hash = ?,
-        updated_at = CURRENT_TIMESTAMP
-    WHERE id = ?
-  `,
+      UPDATE users
+      SET password_hash = ?,
+          must_change_password = 0,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `,
     ).run(passwordHash, session.id);
 
-    return { success: true };
+    const freshUser = getUserById(session.id);
+    currentSession = sanitizeUser(freshUser);
+
+    return {
+      success: true,
+      user: currentSession,
+    };
   });
 }
 

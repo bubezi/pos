@@ -23,11 +23,27 @@ export default function UsersPage() {
   const [resetPasswords, setResetPasswords] = useState<Record<number, string>>(
     {},
   );
+  const [editedUsers, setEditedUsers] = useState<
+    Record<number, { fullName: string; username: string; role: UserRole }>
+  >({});
 
   async function loadUsers() {
     try {
       const data = await window.posAPI.users.list();
       setUsers(data);
+
+      setEditedUsers(
+        Object.fromEntries(
+          data.map((user) => [
+            user.id,
+            {
+              fullName: user.full_name,
+              username: user.username,
+              role: user.role,
+            },
+          ]),
+        ),
+      );
     } catch (error) {
       console.error(error);
       setMessage(
@@ -40,7 +56,7 @@ export default function UsersPage() {
     void loadUsers();
   }, []);
 
-  async function handleCreateUser(event: { preventDefault: () => void; }) {
+  async function handleCreateUser(event: { preventDefault: () => void }) {
     event.preventDefault();
     setMessage("");
     setLoading(true);
@@ -67,18 +83,51 @@ export default function UsersPage() {
   }
 
   async function toggleUser(user: AuthUser) {
+    const edited = editedUsers[user.id] ?? {
+      fullName: user.full_name,
+      username: user.username,
+      role: user.role,
+    };
+
     try {
       await window.posAPI.users.update({
         id: user.id,
-        fullName: user.full_name,
-        username: user.username,
-        role: user.role,
+        fullName: edited.fullName,
+        username: edited.username,
+        role: edited.role,
         isActive: !Boolean(user.is_active),
       });
 
       setMessage(
         `${user.full_name} has been ${user.is_active ? "deactivated" : "activated"}.`,
       );
+      await loadUsers();
+    } catch (error) {
+      console.error(error);
+      setMessage(
+        error instanceof Error ? error.message : "Failed to update user",
+      );
+    }
+  }
+
+  async function saveUserChanges(user: AuthUser) {
+    const edited = editedUsers[user.id];
+
+    if (!edited) {
+      setMessage("Nothing to update.");
+      return;
+    }
+
+    try {
+      await window.posAPI.users.update({
+        id: user.id,
+        fullName: edited.fullName,
+        username: edited.username,
+        role: edited.role,
+        isActive: Boolean(user.is_active),
+      });
+
+      setMessage(`${edited.fullName} updated successfully.`);
       await loadUsers();
     } catch (error) {
       console.error(error);
@@ -197,53 +246,88 @@ export default function UsersPage() {
               <p className="empty">No users found.</p>
             ) : null}
 
-            {users.map((user) => (
-              <article className="user-card" key={user.id}>
-                <div className="user-card-top">
-                  <div>
-                    <strong>{user.full_name}</strong>
-                    <div className="muted">
-                      @{user.username} · {user.role}
+            {users.map((user) => {
+              const edited = editedUsers[user.id] ?? {
+                fullName: user.full_name,
+                username: user.username,
+                role: user.role,
+              };
+
+              return (
+                <article className="user-card" key={user.id}>
+                  <div className="user-card-top">
+                    <div>
+                      <strong>{user.full_name}</strong>
+                      <div className="muted">
+                        @{user.username} · {user.role}
+                      </div>
                     </div>
+
+                    <span
+                      className={`user-status ${user.is_active ? "active" : "inactive"}`}
+                    >
+                      {user.is_active ? "Active" : "Inactive"}
+                    </span>
                   </div>
 
-                  <span
-                    className={`user-status ${user.is_active ? "active" : "inactive"}`}
-                  >
-                    {user.is_active ? "Active" : "Inactive"}
-                  </span>
-                </div>
+                  <div className="user-card-actions">
+                    <label style={{ flex: 1 }}>
+                      <span className="muted">Role</span>
+                      <select
+                        className="input"
+                        value={edited.role}
+                        onChange={(e) =>
+                          setEditedUsers((prev) => ({
+                            ...prev,
+                            [user.id]: {
+                              ...edited,
+                              role: e.target.value as UserRole,
+                            },
+                          }))
+                        }
+                      >
+                        <option value="cashier">Cashier</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    </label>
 
-                <div className="user-card-actions">
-                  <button
-                    className="button secondary"
-                    onClick={() => void toggleUser(user)}
-                  >
-                    {user.is_active ? "Deactivate" : "Activate"}
-                  </button>
+                    <button
+                      className="button"
+                      onClick={() => void saveUserChanges(user)}
+                    >
+                      Save Changes
+                    </button>
 
-                  <input
-                    className="input"
-                    type="password"
-                    placeholder="New password"
-                    value={resetPasswords[user.id] || ""}
-                    onChange={(e) =>
-                      setResetPasswords((prev) => ({
-                        ...prev,
-                        [user.id]: e.target.value,
-                      }))
-                    }
-                  />
+                    <button
+                      className="button secondary"
+                      onClick={() => void toggleUser(user)}
+                    >
+                      {user.is_active ? "Deactivate" : "Activate"}
+                    </button>
 
-                  <button
-                    className="button"
-                    onClick={() => void resetUserPassword(user.id)}
-                  >
-                    Reset Password
-                  </button>
-                </div>
-              </article>
-            ))}
+                    <input
+                      className="input"
+                      type="password"
+                      placeholder="New password"
+                      value={resetPasswords[user.id] || ""}
+                      onChange={(e) =>
+                        setResetPasswords((prev) => ({
+                          ...prev,
+                          [user.id]: e.target.value,
+                        }))
+                      }
+                    />
+
+                    <button
+                      className="button"
+                      onClick={() => void resetUserPassword(user.id)}
+                    >
+                      Reset Password
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         </section>
       </div>
