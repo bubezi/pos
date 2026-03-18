@@ -1,14 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import "../styles/checkout.css";
 
+type LastSale = {
+  receiptNumber: string;
+  changeDue: number;
+  total: number;
+  amountPaid: number;
+} | null;
+
 export default function CheckoutPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [amountPaid, setAmountPaid] = useState<number>(0);
+  const [amountPaid, setAmountPaid] = useState<string>("");
   const [message, setMessage] = useState<string>("");
   const [searchInput, setSearchInput] = useState<string>("");
   const [suggestions, setSuggestions] = useState<Product[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
+  const [lastSale, setLastSale] = useState<LastSale>(null);
 
   const searchRef = useRef<HTMLInputElement | null>(null);
   const searchBoxRef = useRef<HTMLDivElement | null>(null);
@@ -63,6 +71,14 @@ export default function CheckoutPage() {
   const totalItems = useMemo(() => {
     return cart.reduce((sum, item) => sum + item.quantity, 0);
   }, [cart]);
+
+  const amountPaidValue = useMemo(() => {
+    const parsed = Number(amountPaid);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }, [amountPaid]);
+
+  const changeDue = Math.max(0, amountPaidValue - subtotal);
+  const balanceDue = Math.max(0, subtotal - amountPaidValue);
 
   function setInfo(text: string) {
     setMessage(text);
@@ -206,16 +222,24 @@ export default function CheckoutPage() {
           quantity: item.quantity,
         })),
         paymentMethod: "cash",
-        amountPaid,
+        amountPaid: amountPaidValue,
         cashierName: "Bubezi",
         discount: 0,
+      });
+
+      setLastSale({
+        receiptNumber: result.receiptNumber,
+        changeDue: result.changeDue,
+        total: subtotal,
+        amountPaid: amountPaidValue,
       });
 
       setInfo(
         `Sale complete. Receipt: ${result.receiptNumber}. Change: ${result.changeDue}`,
       );
+
       setCart([]);
-      setAmountPaid(0);
+      setAmountPaid("");
       setSearchInput("");
       setSuggestions([]);
       setShowSuggestions(false);
@@ -226,7 +250,19 @@ export default function CheckoutPage() {
     }
   }
 
-  const changeDue = Math.max(0, amountPaid - subtotal);
+  function handleViewReceipt() {
+    if (!lastSale) return;
+
+    // Replace this with your actual receipt viewer API if you already have one.
+    setInfo(`Open receipt ${lastSale.receiptNumber} from your receipt module.`);
+  }
+
+  function handlePrintReceipt() {
+    if (!lastSale) return;
+
+    // Replace this with your actual print API if you already have one.
+    window.print();
+  }
 
   return (
     <div className="checkout-page checkout-page-single">
@@ -259,7 +295,7 @@ export default function CheckoutPage() {
               if (!showSuggestions || suggestions.length === 0) {
                 if (e.key === "Enter") {
                   e.preventDefault();
-                  handleSearchSubmit();
+                  void handleSearchSubmit();
                 }
                 return;
               }
@@ -281,7 +317,7 @@ export default function CheckoutPage() {
                 ) {
                   handleSuggestionSelect(suggestions[highlightedIndex]);
                 } else {
-                  handleSearchSubmit();
+                  void handleSearchSubmit();
                 }
               } else if (e.key === "Escape") {
                 setShowSuggestions(false);
@@ -320,7 +356,7 @@ export default function CheckoutPage() {
           )}
         </div>
 
-        <button className="button" onClick={handleSearchSubmit}>
+        <button className="button" onClick={() => void handleSearchSubmit()}>
           Add
         </button>
       </section>
@@ -388,41 +424,99 @@ export default function CheckoutPage() {
           ))}
         </div>
 
-        <div className="summary-card">
-          <div className="summary-row">
-            <span>Items</span>
-            <strong>{totalItems}</strong>
+        <div className="checkout-bottom-grid">
+          <div className="summary-card">
+            <div className="summary-row">
+              <span>Items</span>
+              <strong>{totalItems}</strong>
+            </div>
+
+            <div className="summary-row">
+              <span>Total</span>
+              <strong>KES {subtotal.toFixed(2)}</strong>
+            </div>
+
+            <div className="summary-row">
+              <label htmlFor="amountPaid">Amount paid</label>
+              <input
+                id="amountPaid"
+                className="input"
+                type="number"
+                inputMode="decimal"
+                placeholder="Enter amount"
+                value={amountPaid}
+                onChange={(e) => setAmountPaid(e.target.value)}
+                min={0}
+              />
+            </div>
+
+            <div className="summary-row">
+              <span>Remaining</span>
+              <strong>KES {balanceDue.toFixed(2)}</strong>
+            </div>
+
+            <div className="summary-row">
+              <span>Change</span>
+              <strong>KES {changeDue.toFixed(2)}</strong>
+            </div>
+
+            <button
+              className="button checkout-button"
+              onClick={() => void handleCheckout()}
+              disabled={cart.length === 0 || amountPaidValue < subtotal}
+            >
+              Complete Sale
+            </button>
           </div>
 
-          <div className="summary-row">
-            <span>Total</span>
-            <strong>KES {subtotal.toFixed(2)}</strong>
-          </div>
+          <div className="receipt-card">
+            <div className="panel-header receipt-header">
+              <h3>Receipt</h3>
+              {lastSale && <span className="badge">Ready</span>}
+            </div>
 
-          <div className="summary-row">
-            <label htmlFor="amountPaid">Amount paid</label>
-            <input
-              id="amountPaid"
-              className="input"
-              type="number"
-              value={amountPaid}
-              onChange={(e) => setAmountPaid(Number(e.target.value))}
-              min={0}
-            />
-          </div>
+            <div className="receipt-details">
+              <div className="summary-row">
+                <span>Change</span>
+                <strong>KES {changeDue.toFixed(2)}</strong>
+              </div>
 
-          <div className="summary-row">
-            <span>Change</span>
-            <strong>KES {changeDue.toFixed(2)}</strong>
-          </div>
+              <div className="summary-row">
+                <span>Last receipt</span>
+                <strong>{lastSale?.receiptNumber || "-"}</strong>
+              </div>
 
-          <button
-            className="button checkout-button"
-            onClick={handleCheckout}
-            disabled={cart.length === 0}
-          >
-            Complete Sale
-          </button>
+              <div className="summary-row">
+                <span>Paid</span>
+                <strong>
+                  KES {(lastSale?.amountPaid ?? amountPaidValue).toFixed(2)}
+                </strong>
+              </div>
+
+              <div className="summary-row">
+                <span>Sale total</span>
+                <strong>KES {(lastSale?.total ?? subtotal).toFixed(2)}</strong>
+              </div>
+            </div>
+
+            <div className="receipt-actions">
+              <button
+                className="button secondary"
+                onClick={handleViewReceipt}
+                disabled={!lastSale}
+              >
+                View Receipt
+              </button>
+
+              <button
+                className="button"
+                onClick={handlePrintReceipt}
+                disabled={!lastSale}
+              >
+                Print Receipt
+              </button>
+            </div>
+          </div>
         </div>
       </section>
     </div>

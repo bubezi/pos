@@ -393,3 +393,54 @@
   color: var(--text-h);
   white-space: nowrap;
 }
+
+.checkout-bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 18px;
+  align-items: start;
+}
+
+.receipt-card,
+.summary-card {
+  height: 100%;
+}
+
+.receipt-card {
+  background: var(--panel-2);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.receipt-header {
+  margin-bottom: 12px;
+}
+
+.receipt-details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.receipt-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.button.secondary {
+  background: transparent;
+  border: 1px solid currentColor;
+}
+
+@media (max-width: 900px) {
+  .checkout-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .receipt-actions {
+    flex-direction: column;
+  }
+}

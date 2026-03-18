@@ -1,9 +1,10 @@
 import { useState } from "react";
 import CheckoutPage from "./pages/CheckoutPage";
 import ProductsPage from "./pages/ProductsPage";
+import SalesHistoryPage from "./pages/SalesHistoryPage";
 import "./App.css";
 
-type Page = "checkout" | "products";
+type Page = "checkout" | "products" | "sales";
 
 function App() {
   const [page, setPage] = useState<Page>("checkout");
@@ -27,9 +28,7 @@ function App() {
               <span />
             </button>
 
-            <div className="brand">
-              {sidebarCollapsed ? "" : "WigsnStyle"}
-            </div>
+            <div className="brand">{sidebarCollapsed ? "" : "WigsnStyle"}</div>
           </div>
         </div>
 
@@ -51,11 +50,24 @@ function App() {
             <span className="nav-icon">📦</span>
             {!sidebarCollapsed && <span className="nav-label">Products</span>}
           </button>
+
+          <button
+            className={`nav-button ${page === "sales" ? "active" : ""}`}
+            onClick={() => setPage("sales")}
+            title="Sales History"
+          >
+            <span className="nav-icon">🧾</span>
+            {!sidebarCollapsed && (
+              <span className="nav-label">Sales History</span>
+            )}
+          </button>
         </nav>
       </aside>
 
       <main className="main-content">
-        {page === "checkout" ? <CheckoutPage /> : <ProductsPage />}
+        {page === "checkout" && <CheckoutPage />}
+        {page === "products" && <ProductsPage />}
+        {page === "sales" && <SalesHistoryPage />}
       </main>
     </div>
   );

@@ -15,8 +15,9 @@ require("./db.cjs");
 
 const { registerProductHandlers } = require("./ipc/products.cjs");
 const { registerCheckoutHandlers } = require("./ipc/checkout.cjs");
-const { registerReceiptHandlers } = require('./ipc/receipts.cjs')
-const { registerDevToolHandlers } = require('./ipc/dev-tools.cjs')
+const { registerReceiptHandlers } = require("./ipc/receipts.cjs");
+const { registerDevToolHandlers } = require("./ipc/dev-tools.cjs");
+const { registerSalesHandlers } = require("./ipc/sales.cjs");
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -36,13 +37,14 @@ function createWindow() {
   }
 }
 
-app.setName('WigsnStyle Point of Sale System')
+app.setName("WigsnStyle Point of Sale System");
 
 app.whenReady().then(() => {
   registerProductHandlers();
   registerCheckoutHandlers();
   registerReceiptHandlers();
   registerDevToolHandlers();
+  registerSalesHandlers();
   createWindow();
 
   app.on("activate", () => {
