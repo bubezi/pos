@@ -23,6 +23,8 @@ const emptyForm: ProductFormState = {
   reorder_level: "",
 };
 
+const ITEMS_PER_PAGE = 10;
+
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [message, setMessage] = useState("");
@@ -31,6 +33,7 @@ export default function ProductsPage() {
   const [form, setForm] = useState<ProductFormState>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   async function loadProducts() {
     try {
@@ -70,6 +73,34 @@ export default function ProductsPage() {
       return matchesSearch && matchesStatus;
     });
   }, [products, search, statusFilter]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredProducts.length / ITEMS_PER_PAGE),
+  );
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredProducts, currentPage]);
+
+  const pageNumbers = useMemo(() => {
+    const pages: number[] = [];
+    for (let i = 1; i <= totalPages; i += 1) {
+      pages.push(i);
+    }
+    return pages;
+  }, [totalPages]);
 
   function updateForm<K extends keyof ProductFormState>(
     key: K,
@@ -174,6 +205,13 @@ export default function ProductsPage() {
     }
   }
 
+  const startItem =
+    filteredProducts.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const endItem = Math.min(
+    currentPage * ITEMS_PER_PAGE,
+    filteredProducts.length,
+  );
+
   return (
     <div className="products-page">
       <section className="panel">
@@ -227,14 +265,14 @@ export default function ProductsPage() {
             </thead>
 
             <tbody>
-              {filteredProducts.length === 0 ? (
+              {paginatedProducts.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="empty-cell">
                     No products found.
                   </td>
                 </tr>
               ) : (
-                filteredProducts.map((product) => (
+                paginatedProducts.map((product) => (
                   <tr key={product.id}>
                     <td>{product.name}</td>
                     <td>{product.sku || "-"}</td>
@@ -286,6 +324,44 @@ export default function ProductsPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        <div className="pagination">
+          <div className="pagination-info">
+            Showing {startItem}-{endItem} of {filteredProducts.length}
+          </div>
+
+          <div className="pagination-controls">
+            <button
+              className="button secondary small"
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </button>
+
+            {pageNumbers.map((page) => (
+              <button
+                key={page}
+                className={`button small ${
+                  currentPage === page ? "pagination-page-active" : "secondary"
+                }`}
+                onClick={() => setCurrentPage(page)}
+              >
+                {page}
+              </button>
+            ))}
+
+            <button
+              className="button secondary small"
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </button>
+          </div>
         </div>
       </section>
 
