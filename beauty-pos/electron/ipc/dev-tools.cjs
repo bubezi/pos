@@ -1,8 +1,11 @@
 const { ipcMain } = require("electron");
+const { requireAdmin } = require("./auth.cjs");
+
 const db = require("../db.cjs");
 
 function registerDevToolHandlers() {
   ipcMain.handle("dev:seedProducts", () => {
+    requireAdmin();
     const insert = db.prepare(`
       INSERT OR IGNORE INTO products
       (sku, name, category, price, stock_qty, reorder_level)

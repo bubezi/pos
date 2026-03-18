@@ -1,4 +1,6 @@
 const { ipcMain } = require("electron");
+const { requireAuth } = require("./auth.cjs");
+
 const db = require("../db.cjs");
 
 function normalizeText(value) {
@@ -12,6 +14,7 @@ function toPositiveInt(value, fallback) {
 
 function registerSalesHandlers() {
   ipcMain.handle("sales:list", (_, filters = {}) => {
+    requireAuth();
     const page = toPositiveInt(filters.page, 1);
     const pageSize = toPositiveInt(filters.pageSize, 10);
 
@@ -96,6 +99,7 @@ function registerSalesHandlers() {
   });
 
   ipcMain.handle("sales:getById", (_, saleId) => {
+    requireAuth();
     const id = Number(saleId);
 
     if (!id) {

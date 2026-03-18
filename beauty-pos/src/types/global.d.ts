@@ -39,6 +39,34 @@ declare global {
         list: (filters?: SalesListFilters) => Promise<SalesListResponse>;
         getById: (saleId: number) => Promise<SaleDetails | null>;
       };
+      auth: {
+        login: (payload: {
+          username: string;
+          password: string;
+        }) => Promise<{ success: boolean; user: AuthUser }>;
+        logout: () => Promise<{ success: boolean }>;
+        getSession: () => Promise<AuthUser | null>;
+      };
+      users: {
+        list: () => Promise<AuthUser[]>;
+        create: (payload: {
+          fullName: string;
+          username: string;
+          password: string;
+          role: UserRole;
+        }) => Promise<{ success: boolean; id: number }>;
+        update: (payload: {
+          id: number;
+          fullName: string;
+          username: string;
+          role: UserRole;
+          isActive: boolean;
+        }) => Promise<{ success: boolean }>;
+        changePassword: (payload: {
+          id: number;
+          newPassword: string;
+        }) => Promise<{ success: boolean }>;
+      };
       dev: {
         seedProducts: () => Promise<{ success: boolean }>;
       };
@@ -171,5 +199,17 @@ declare global {
     sale: ReceiptSale | null;
     items: ReceiptSaleItem[];
     receipt: ReceiptInfo | null;
+  }
+
+  type UserRole = "admin" | "cashier";
+
+  interface AuthUser {
+    id: number;
+    full_name: string;
+    username: string;
+    role: UserRole;
+    is_active: number;
+    created_at: string;
+    updated_at: string;
   }
 }

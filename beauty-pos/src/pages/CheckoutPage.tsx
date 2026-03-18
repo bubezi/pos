@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import "../styles/checkout.css";
+import { useAuth } from "../context/AuthContext";
 
 type LastSale = {
   saleId: number;
@@ -18,9 +19,9 @@ export default function CheckoutPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
   const [lastSale, setLastSale] = useState<LastSale>(null);
-
   const searchRef = useRef<HTMLInputElement | null>(null);
   const searchBoxRef = useRef<HTMLDivElement | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     searchRef.current?.focus();
@@ -127,8 +128,7 @@ export default function CheckoutPage() {
   }
 
   async function getLatestProduct(productId: number) {
-    const all = await window.posAPI.products.getAll();
-    return all.find((p) => p.id === productId) || null;
+    return await window.posAPI.products.getById(productId);
   }
 
   async function changeQty(productId: number, qty: number) {
@@ -224,7 +224,7 @@ export default function CheckoutPage() {
         })),
         paymentMethod: "cash",
         amountPaid: amountPaidValue,
-        cashierName: "Bubezi",
+        cashierName: user?.full_name,
         discount: 0,
       });
 

@@ -1,4 +1,6 @@
 const { ipcMain } = require("electron");
+const { requireAuth, requireAdmin } = require("./auth.cjs");
+
 const db = require("../db.cjs");
 
 function normalizeSku(value) {
@@ -21,6 +23,7 @@ function toNumber(value, fallback = 0) {
 
 function registerProductHandlers() {
   ipcMain.handle("products:list", () => {
+    requireAuth();
     const stmt = db.prepare(`
       SELECT id, sku, name, category, price, stock_qty, reorder_level, is_active
       FROM products
@@ -31,6 +34,7 @@ function registerProductHandlers() {
   });
 
   ipcMain.handle("products:getAll", () => {
+    requireAuth();
     const stmt = db.prepare(`
       SELECT id, sku, name, category, price, stock_qty, reorder_level, is_active
       FROM products
@@ -40,6 +44,7 @@ function registerProductHandlers() {
   });
 
   ipcMain.handle("products:getById", (_, productId) => {
+    requireAuth();
     const stmt = db.prepare(`
       SELECT id, sku, name, category, price, stock_qty, reorder_level, is_active
       FROM products
@@ -50,6 +55,7 @@ function registerProductHandlers() {
   });
 
   ipcMain.handle("products:create", (_, product) => {
+    requireAdmin();
     const sku = normalizeSku(product.sku) || null;
     const name = String(product.name || "").trim();
 
@@ -75,6 +81,7 @@ function registerProductHandlers() {
   });
 
   ipcMain.handle("products:update", (_, product) => {
+    requireAdmin();
     const id = Number(product.id);
     const sku = normalizeSku(product.sku) || null;
     const name = String(product.name || "").trim();
@@ -114,6 +121,7 @@ function registerProductHandlers() {
   });
 
   ipcMain.handle("products:deactivate", (_, productId) => {
+    requireAdmin();
     const stmt = db.prepare(`
       UPDATE products
       SET is_active = 0,
@@ -125,6 +133,7 @@ function registerProductHandlers() {
     return { success: true };
   });
   ipcMain.handle("products:activate", (_, productId) => {
+    requireAdmin();
     const stmt = db.prepare(`
       UPDATE products
       SET is_active = 1,
@@ -137,6 +146,7 @@ function registerProductHandlers() {
   });
 
   ipcMain.handle("products:updateStock", (_, { productId, stockQty }) => {
+    requireAdmin();
     const stmt = db.prepare(`
       UPDATE products
       SET stock_qty = ?, updated_at = CURRENT_TIMESTAMP
@@ -148,6 +158,7 @@ function registerProductHandlers() {
   });
 
   ipcMain.handle("products:findBySku", (_, rawSku) => {
+    requireAuth();
     const sku = normalizeSku(rawSku);
 
     if (!sku) return null;
@@ -164,6 +175,7 @@ function registerProductHandlers() {
   });
 
   ipcMain.handle("products:search", (_, rawTerm) => {
+    requireAuth();
     const term = normalizeSearch(rawTerm);
 
     if (!term) return [];

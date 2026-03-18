@@ -1,5 +1,6 @@
-const { ipcMain } = require('electron');
-const db = require('../db.cjs');
+const { ipcMain } = require("electron");
+const { requireAuth } = require("./auth.cjs");
+const db = require("../db.cjs");
 
 function generateReceiptNumber() {
   const now = new Date();
@@ -10,17 +11,26 @@ function generateReceiptNumber() {
   const mi = String(now.getMinutes()).padStart(2, "0");
   const ss = String(now.getSeconds()).padStart(2, "0");
   const ms = String(now.getMilliseconds()).padStart(3, "0");
-  const rand = Math.floor(Math.random() * 1000).toString().padStart(3, "0");
+  const rand = Math.floor(Math.random() * 1000)
+    .toString()
+    .padStart(3, "0");
 
   return `R-${yyyy}${mm}${dd}-${hh}${mi}${ss}${ms}-${rand}`;
 }
 
 function registerCheckoutHandlers() {
-  ipcMain.handle('checkout:completeSale', (_, payload) => {
-    const { items, paymentMethod, amountPaid, cashierName, discount = 0, notes = '' } = payload;
-
+  ipcMain.handle("checkout:completeSale", (_, payload) => {
+    const user = requireAuth();
+    const {
+      items,
+      paymentMethod,
+      amountPaid,
+      discount = 0,
+      notes = "",
+    } = payload;
+    const cashierName = user.full_name;
     if (!Array.isArray(items) || items.length === 0) {
-      throw new Error('Cart is empty.');
+      throw new Error("Cart is empty.");
     }
 
     const tx = db.transaction(() => {
@@ -53,7 +63,7 @@ function registerCheckoutHandlers() {
       const total = Math.max(0, subtotal - Number(discount));
 
       if (Number(amountPaid) < total) {
-        throw new Error('Amount paid is less than total.');
+        throw new Error("Amount paid is less than total.");
       }
 
       const changeDue = Number(amountPaid) - total;
@@ -76,7 +86,7 @@ function registerCheckoutHandlers() {
         changeDue,
         paymentMethod,
         cashierName || null,
-        notes || null
+        notes || null,
       );
 
       const saleId = saleResult.lastInsertRowid;
@@ -104,7 +114,7 @@ function registerCheckoutHandlers() {
           product.name,
           product.price,
           item.quantity,
-          lineTotal
+          lineTotal,
         );
 
         updateStockStmt.run(item.quantity, product.id);

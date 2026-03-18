@@ -31,6 +31,18 @@ contextBridge.exposeInMainWorld("posAPI", {
     list: (filters) => ipcRenderer.invoke("sales:list", filters),
     getById: (saleId) => ipcRenderer.invoke("sales:getById", saleId),
   },
+  auth: {
+    login: (payload) => ipcRenderer.invoke("auth:login", payload),
+    logout: () => ipcRenderer.invoke("auth:logout"),
+    getSession: () => ipcRenderer.invoke("auth:get-session"),
+  },
+  users: {
+    list: () => ipcRenderer.invoke("users:list"),
+    create: (payload) => ipcRenderer.invoke("users:create", payload),
+    update: (payload) => ipcRenderer.invoke("users:update", payload),
+    changePassword: (payload) =>
+      ipcRenderer.invoke("users:change-password", payload),
+  },
   dev: {
     seedProducts: () => ipcRenderer.invoke("dev:seedProducts"),
   },

@@ -1,4 +1,6 @@
 const { ipcMain, BrowserWindow, dialog } = require("electron");
+const { requireAuth } = require('./auth.cjs');
+
 const fs = require("fs");
 const db = require("../db.cjs");
 
@@ -211,20 +213,25 @@ async function createReceiptWindow(saleId, { show = true } = {}) {
 
 function registerReceiptHandlers() {
   ipcMain.handle("receipts:getBySaleId", (_, saleId) => {
+    requireAuth();
     return getReceiptData(saleId);
   });
 
   ipcMain.handle("receipts:markPrinted", (_, saleId) => {
+    requireAuth();
+    requireAuth();
     markPrintedInternal(saleId);
     return { success: true };
   });
 
   ipcMain.handle("receipts:preview", async (_, saleId) => {
+    requireAuth();
     await createReceiptWindow(saleId, { show: true });
     return { success: true };
   });
 
   ipcMain.handle("receipts:print", async (_, saleId) => {
+    requireAuth();
     const { win } = await createReceiptWindow(saleId, { show: true });
 
     win.webContents.once("did-finish-load", () => {
@@ -247,6 +254,7 @@ function registerReceiptHandlers() {
   });
 
   ipcMain.handle("receipts:savePdf", async (_, saleId) => {
+    requireAuth();
     const { win, data } = await createReceiptWindow(saleId, { show: false });
 
     try {

@@ -13,6 +13,7 @@ console.log("[main] preload path =", path.join(__dirname, "preload.cjs"));
 
 require("./db.cjs");
 
+const { registerAuthHandlers } = require("./ipc/auth.cjs");
 const { registerProductHandlers } = require("./ipc/products.cjs");
 const { registerCheckoutHandlers } = require("./ipc/checkout.cjs");
 const { registerReceiptHandlers } = require("./ipc/receipts.cjs");
@@ -40,6 +41,7 @@ function createWindow() {
 app.setName("WigsnStyle Point of Sale System");
 
 app.whenReady().then(() => {
+  registerAuthHandlers();
   registerProductHandlers();
   registerCheckoutHandlers();
   registerReceiptHandlers();
