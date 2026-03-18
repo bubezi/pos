@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import "../styles/checkout.css";
 
 export default function CheckoutPage() {
-  const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [amountPaid, setAmountPaid] = useState<number>(0);
   const [message, setMessage] = useState<string>("");
@@ -13,20 +12,6 @@ export default function CheckoutPage() {
 
   const searchRef = useRef<HTMLInputElement | null>(null);
   const searchBoxRef = useRef<HTMLDivElement | null>(null);
-
-  async function loadProducts() {
-    try {
-      const data = await window.posAPI.products.list();
-      setProducts(data);
-    } catch (error) {
-      console.error(error);
-      setMessage("Failed to load products.");
-    }
-  }
-
-  useEffect(() => {
-    loadProducts();
-  }, []);
 
   useEffect(() => {
     searchRef.current?.focus();
@@ -124,8 +109,13 @@ export default function CheckoutPage() {
     searchRef.current?.focus();
   }
 
-  function changeQty(productId: number, qty: number) {
-    const product = products.find((p) => p.id === productId);
+  async function getLatestProduct(productId: number) {
+    const all = await window.posAPI.products.getAll();
+    return all.find((p) => p.id === productId) || null;
+  }
+
+  async function changeQty(productId: number, qty: number) {
+    const product = await getLatestProduct(productId);
     if (!product) return;
 
     if (qty <= 0) {
@@ -150,13 +140,13 @@ export default function CheckoutPage() {
   function incrementQty(productId: number) {
     const cartItem = cart.find((item) => item.productId === productId);
     if (!cartItem) return;
-    changeQty(productId, cartItem.quantity + 1);
+    void changeQty(productId, cartItem.quantity + 1);
   }
 
   function decrementQty(productId: number) {
     const cartItem = cart.find((item) => item.productId === productId);
     if (!cartItem) return;
-    changeQty(productId, cartItem.quantity - 1);
+    void changeQty(productId, cartItem.quantity - 1);
   }
 
   function removeFromCart(productId: number) {
@@ -208,17 +198,6 @@ export default function CheckoutPage() {
     addToCart(product);
   }
 
-  async function handleSeed() {
-    try {
-      await window.posAPI.dev.seedProducts();
-      await loadProducts();
-      setInfo("Sample products added.");
-      searchRef.current?.focus();
-    } catch (error: any) {
-      setInfo(error.message || "Seeding failed");
-    }
-  }
-
   async function handleCheckout() {
     try {
       const result = await window.posAPI.checkout.completeSale({
@@ -241,7 +220,6 @@ export default function CheckoutPage() {
       setSuggestions([]);
       setShowSuggestions(false);
       setHighlightedIndex(-1);
-      await loadProducts();
       searchRef.current?.focus();
     } catch (error: any) {
       setInfo(error.message || "Checkout failed");
@@ -251,19 +229,13 @@ export default function CheckoutPage() {
   const changeDue = Math.max(0, amountPaid - subtotal);
 
   return (
-    <div className="checkout-page">
+    <div className="checkout-page checkout-page-single">
       <header className="topbar">
         <div>
           <h1>WigsnStyle POS</h1>
           <p className="muted">
             Scan barcode or search by name, SKU, or category.
           </p>
-        </div>
-
-        <div className="topbar-actions">
-          <button className="button secondary" onClick={handleSeed}>
-            Seed Sample Products
-          </button>
         </div>
       </header>
 
@@ -355,146 +327,104 @@ export default function CheckoutPage() {
 
       {message && <div className="alert">{message}</div>}
 
-      <div className="checkout-grid">
-        <section className="panel products-panel">
-          <div className="panel-header">
-            <h2>Products</h2>
-            <span className="badge">{products.length} items</span>
-          </div>
+      <section className="panel cart-panel cart-panel-wide">
+        <div className="panel-header">
+          <h2>Cart</h2>
+          <span className="badge">{totalItems} pcs</span>
+        </div>
 
-          <div className="product-list">
-            {products.length === 0 && <p className="empty">No products yet.</p>}
+        <div className="cart-list">
+          {cart.length === 0 && <p className="empty">Cart is empty.</p>}
 
-            {products.map((product) => (
-              <article key={product.id} className="product-card">
-                <div className="product-main">
-                  <div className="product-title-row">
-                    <strong className="product-title">{product.name}</strong>
-                    <span
-                      className={`stock-pill ${product.stock_qty <= 0 ? "danger" : ""}`}
-                    >
-                      Stock: {product.stock_qty}
-                    </span>
-                  </div>
+          {cart.map((item) => (
+            <article key={item.productId} className="cart-card">
+              <div className="cart-main">
+                <strong className="product-title">{item.name}</strong>
+                <div className="product-meta">
+                  <span>SKU: {item.sku || "-"}</span>
+                  <span>KES {item.price.toFixed(2)} each</span>
+                </div>
+              </div>
 
-                  <div className="product-meta">
-                    <span>Category: {product.category || "-"}</span>
-                    <span>SKU: {product.sku || "-"}</span>
-                    <span>KES {Number(product.price).toFixed(2)}</span>
-                  </div>
+              <div className="cart-controls">
+                <div className="qty-control">
+                  <button
+                    className="qty-btn"
+                    onClick={() => decrementQty(item.productId)}
+                  >
+                    −
+                  </button>
+
+                  <input
+                    className="qty-input"
+                    type="number"
+                    value={item.quantity}
+                    min={1}
+                    onChange={(e) =>
+                      void changeQty(item.productId, Number(e.target.value))
+                    }
+                  />
+
+                  <button
+                    className="qty-btn"
+                    onClick={() => incrementQty(item.productId)}
+                  >
+                    +
+                  </button>
+                </div>
+
+                <div className="line-total">
+                  KES {(item.price * item.quantity).toFixed(2)}
                 </div>
 
                 <button
-                  className="button"
-                  onClick={() => addToCart(product)}
-                  disabled={product.stock_qty <= 0}
+                  className="button danger"
+                  onClick={() => removeFromCart(item.productId)}
                 >
-                  Add
+                  Remove
                 </button>
-              </article>
-            ))}
-          </div>
-        </section>
+              </div>
+            </article>
+          ))}
+        </div>
 
-        <section className="panel cart-panel">
-          <div className="panel-header">
-            <h2>Cart</h2>
-            <span className="badge">{totalItems} pcs</span>
-          </div>
-
-          <div className="cart-list">
-            {cart.length === 0 && <p className="empty">Cart is empty.</p>}
-
-            {cart.map((item) => (
-              <article key={item.productId} className="cart-card">
-                <div className="cart-main">
-                  <strong className="product-title">{item.name}</strong>
-                  <div className="product-meta">
-                    <span>SKU: {item.sku || "-"}</span>
-                    <span>KES {item.price.toFixed(2)} each</span>
-                  </div>
-                </div>
-
-                <div className="cart-controls">
-                  <div className="qty-control">
-                    <button
-                      className="qty-btn"
-                      onClick={() => decrementQty(item.productId)}
-                    >
-                      −
-                    </button>
-
-                    <input
-                      className="qty-input"
-                      type="number"
-                      value={item.quantity}
-                      min={1}
-                      onChange={(e) =>
-                        changeQty(item.productId, Number(e.target.value))
-                      }
-                    />
-
-                    <button
-                      className="qty-btn"
-                      onClick={() => incrementQty(item.productId)}
-                    >
-                      +
-                    </button>
-                  </div>
-
-                  <div className="line-total">
-                    KES {(item.price * item.quantity).toFixed(2)}
-                  </div>
-
-                  <button
-                    className="button danger"
-                    onClick={() => removeFromCart(item.productId)}
-                  >
-                    Remove
-                  </button>
-                </div>
-              </article>
-            ))}
+        <div className="summary-card">
+          <div className="summary-row">
+            <span>Items</span>
+            <strong>{totalItems}</strong>
           </div>
 
-          <div className="summary-card">
-            <div className="summary-row">
-              <span>Items</span>
-              <strong>{totalItems}</strong>
-            </div>
-
-            <div className="summary-row">
-              <span>Total</span>
-              <strong>KES {subtotal.toFixed(2)}</strong>
-            </div>
-
-            <div className="summary-row">
-              <label htmlFor="amountPaid">Amount paid</label>
-              <input
-                id="amountPaid"
-                className="input"
-                type="number"
-                value={amountPaid}
-                onChange={(e) => setAmountPaid(Number(e.target.value))}
-                min={0}
-              />
-            </div>
-
-            <div className="summary-row">
-              <span>Change</span>
-              <strong>KES {changeDue.toFixed(2)}</strong>
-            </div>
-
-            <button
-              className="button checkout-button"
-              onClick={handleCheckout}
-              disabled={cart.length === 0}
-            >
-              Complete Sale
-            </button>
+          <div className="summary-row">
+            <span>Total</span>
+            <strong>KES {subtotal.toFixed(2)}</strong>
           </div>
-        </section>
-      </div>
+
+          <div className="summary-row">
+            <label htmlFor="amountPaid">Amount paid</label>
+            <input
+              id="amountPaid"
+              className="input"
+              type="number"
+              value={amountPaid}
+              onChange={(e) => setAmountPaid(Number(e.target.value))}
+              min={0}
+            />
+          </div>
+
+          <div className="summary-row">
+            <span>Change</span>
+            <strong>KES {changeDue.toFixed(2)}</strong>
+          </div>
+
+          <button
+            className="button checkout-button"
+            onClick={handleCheckout}
+            disabled={cart.length === 0}
+          >
+            Complete Sale
+          </button>
+        </div>
+      </section>
     </div>
   );
 }

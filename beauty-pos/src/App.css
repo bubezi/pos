@@ -1,0 +1,136 @@
+.app-shell {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100svh;
+  transition: grid-template-columns 0.2s ease;
+}
+
+.app-shell.sidebar-collapsed {
+  grid-template-columns: 84px 1fr;
+}
+
+.sidebar {
+  border-right: 1px solid var(--border);
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--bg);
+}
+
+.sidebar-top {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-h);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-toggle {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border);
+  background: transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 10px;
+  flex-shrink: 0;
+}
+
+.sidebar-toggle:hover {
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+}
+
+.sidebar-toggle span {
+  display: block;
+  height: 2px;
+  width: 100%;
+  background: var(--text-h);
+  border-radius: 999px;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.nav-button {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-h);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+}
+
+.nav-button.active {
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+}
+
+.nav-button:hover {
+  background: var(--accent-bg);
+}
+
+.nav-icon {
+  width: 20px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.nav-label {
+  white-space: nowrap;
+}
+
+.main-content {
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .app-shell,
+  .app-shell.sidebar-collapsed {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 14px;
+  }
+
+  .sidebar-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .brand {
+    font-size: 20px;
+  }
+}

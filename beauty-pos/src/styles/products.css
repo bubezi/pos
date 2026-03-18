@@ -1,0 +1,167 @@
+.products-page {
+  padding: 20px;
+  text-align: left;
+  max-width: 1180px;
+}
+
+.products-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.toolbar-subtext {
+  margin-top: 6px;
+  color: var(--text);
+}
+
+.toolbar-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.products-search {
+  min-width: 280px;
+}
+
+.filter-select {
+  min-width: 150px;
+}
+
+.products-table-wrap {
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.products-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+}
+
+.products-table th,
+.products-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.products-table th {
+  background: var(--social-bg);
+  color: var(--text-h);
+  font-weight: 700;
+}
+
+.products-table tbody tr:hover {
+  background: var(--accent-bg);
+}
+
+.action-cell {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.small {
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.status-active {
+  color: #15803d;
+  font-weight: 700;
+}
+
+.status-inactive {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.button.success {
+  background: #15803d;
+  border-color: #15803d;
+  color: white;
+}
+
+.empty-cell {
+  text-align: center;
+  color: var(--text);
+  padding: 24px;
+}
+
+.product-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  justify-content: flex-end;
+  z-index: 100;
+}
+
+.product-drawer {
+  width: min(440px, 100%);
+  height: 100%;
+  background: var(--bg);
+  border-left: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.product-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 900px) {
+  .products-page {
+    max-width: 100%;
+  }
+
+  .products-search {
+    min-width: 100%;
+  }
+
+  .toolbar-actions {
+    width: 100%;
+  }
+
+  .product-drawer {
+    width: 100%;
+  }
+}

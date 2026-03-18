@@ -6,6 +6,10 @@
   text-align: left;
 }
 
+.checkout-page-single {
+  max-width: 1100px;
+}
+
 .topbar {
   display: flex;
   justify-content: space-between;
@@ -27,6 +31,10 @@
 .topbar-actions {
   display: flex;
   gap: 12px;
+}
+
+.cart-panel-wide {
+  min-height: 520px;
 }
 
 .scan-panel {

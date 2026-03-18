@@ -6,9 +6,16 @@ declare global {
       ping: () => string;
       products: {
         list: () => Promise<Product[]>;
+        getAll: () => Promise<Product[]>;
+        getById: (productId: number) => Promise<Product | null>;
         create: (
           product: Partial<Product>,
         ) => Promise<{ success: boolean; id: number }>;
+        update: (
+          product: Partial<Product> & { id: number },
+        ) => Promise<{ success: boolean }>;
+        deactivate: (productId: number) => Promise<{ success: boolean }>;
+        activate: (productId: number) => Promise<{ success: boolean }>;
         updateStock: (payload: {
           productId: number;
           stockQty: number;
@@ -39,7 +46,7 @@ declare global {
     reorder_level: number;
     is_active: number;
   }
-  
+
   interface CartItem {
     productId: number;
     name: string;
