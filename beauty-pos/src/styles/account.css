@@ -1,0 +1,24 @@
+.account-page {
+  padding: 24px;
+}
+
+.account-panel {
+  max-width: 560px;
+}
+
+.account-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.account-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.account-form span {
+  color: var(--text-h);
+  font-weight: 600;
+}

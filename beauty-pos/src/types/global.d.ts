@@ -46,6 +46,10 @@ declare global {
         }) => Promise<{ success: boolean; user: AuthUser }>;
         logout: () => Promise<{ success: boolean }>;
         getSession: () => Promise<AuthUser | null>;
+        changePassword: (payload: {
+          currentPassword: string;
+          newPassword: string;
+        }) => Promise<{ success: boolean }>;
       };
       users: {
         list: () => Promise<AuthUser[]>;

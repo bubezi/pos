@@ -153,7 +153,8 @@ function registerAuthHandlers() {
       throw new Error("Invalid role");
     }
 
-    db.prepare(`
+    db.prepare(
+      `
       UPDATE users
       SET full_name = ?,
           username = ?,
@@ -161,7 +162,8 @@ function registerAuthHandlers() {
           is_active = ?,
           updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(fullName, username, role, isActive, id);
+    `,
+    ).run(fullName, username, role, isActive, id);
 
     return { success: true };
   });
@@ -178,12 +180,62 @@ function registerAuthHandlers() {
 
     const passwordHash = hashPassword(newPassword);
 
-    db.prepare(`
+    db.prepare(
+      `
       UPDATE users
       SET password_hash = ?,
           updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(passwordHash, id);
+    `,
+    ).run(passwordHash, id);
+
+    return { success: true };
+  });
+
+  ipcMain.handle("auth:change-password", async (_, payload) => {
+    const session = requireAuth();
+
+    const currentPassword = String(payload?.currentPassword || "");
+    const newPassword = String(payload?.newPassword || "");
+
+    if (!currentPassword || !newPassword) {
+      throw new Error("Current password and new password are required");
+    }
+
+    if (newPassword.length < 4) {
+      throw new Error("New password must be at least 4 characters");
+    }
+
+    const user = db
+      .prepare(
+        `
+    SELECT *
+    FROM users
+    WHERE id = ?
+    LIMIT 1
+  `,
+      )
+      .get(session.id);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const ok = verifyPassword(currentPassword, user.password_hash);
+    if (!ok) {
+      throw new Error("Current password is incorrect");
+    }
+
+    const passwordHash = hashPassword(newPassword);
+
+    db.prepare(
+      `
+    UPDATE users
+    SET password_hash = ?,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `,
+    ).run(passwordHash, session.id);
 
     return { success: true };
   });

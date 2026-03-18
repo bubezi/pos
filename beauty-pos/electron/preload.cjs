@@ -35,6 +35,8 @@ contextBridge.exposeInMainWorld("posAPI", {
     login: (payload) => ipcRenderer.invoke("auth:login", payload),
     logout: () => ipcRenderer.invoke("auth:logout"),
     getSession: () => ipcRenderer.invoke("auth:get-session"),
+    changePassword: (payload) =>
+      ipcRenderer.invoke("auth:change-password", payload),
   },
   users: {
     list: () => ipcRenderer.invoke("users:list"),

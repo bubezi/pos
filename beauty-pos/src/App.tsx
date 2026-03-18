@@ -3,10 +3,12 @@ import CheckoutPage from "./pages/CheckoutPage";
 import ProductsPage from "./pages/ProductsPage";
 import SalesHistoryPage from "./pages/SalesHistoryPage";
 import LoginPage from "./pages/LoginPage";
+import UsersPage from "./pages/UsersPage";
+import ChangePasswordPage from "./pages/ChangePasswordPage";
 import { useAuth } from "./context/AuthContext";
 import "./App.css";
 
-type Page = "checkout" | "products" | "sales";
+type Page = "checkout" | "products" | "sales" | "users" | "account";
 
 function App() {
   const { user, loading, isAuthenticated, isAdmin, logout } = useAuth();
@@ -26,7 +28,9 @@ function App() {
       ? "checkout"
       : page === "sales" && !isAdmin
         ? "checkout"
-        : page;
+        : page === "users" && !isAdmin
+          ? "checkout"
+          : page;
 
   const initials = user?.full_name
     ?.split(" ")
@@ -90,6 +94,26 @@ function App() {
               )}
             </button>
           )}
+
+          {isAdmin && (
+            <button
+              className={`nav-button ${visiblePage === "users" ? "active" : ""}`}
+              onClick={() => setPage("users")}
+              title="Users"
+            >
+              <span className="nav-icon">👥</span>
+              {!sidebarCollapsed && <span className="nav-label">Users</span>}
+            </button>
+          )}
+
+          <button
+            className={`nav-button ${visiblePage === "account" ? "active" : ""}`}
+            onClick={() => setPage("account")}
+            title="Change Password"
+          >
+            <span className="nav-icon">🔐</span>
+            {!sidebarCollapsed && <span className="nav-label">Account</span>}
+          </button>
         </nav>
 
         <div className="sidebar-footer">
@@ -137,6 +161,8 @@ function App() {
         {visiblePage === "checkout" && <CheckoutPage />}
         {visiblePage === "products" && isAdmin && <ProductsPage />}
         {visiblePage === "sales" && isAdmin && <SalesHistoryPage />}
+        {visiblePage === "users" && isAdmin && <UsersPage />}
+        {visiblePage === "account" && <ChangePasswordPage />}
       </main>
     </div>
   );
