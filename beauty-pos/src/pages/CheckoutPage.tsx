@@ -293,7 +293,7 @@ export default function CheckoutPage() {
     <div className="checkout-page checkout-page-single">
       <header className="topbar">
         <div>
-          <h1>WigsnStyle POS</h1>
+          <h1>WigsnStyle Checkout</h1>
           <p className="muted">
             Scan barcode or search by name, SKU, or category.
           </p>
@@ -496,7 +496,7 @@ export default function CheckoutPage() {
 
           <div className="receipt-card">
             <div className="panel-header receipt-header">
-              <h3>Receipt</h3>
+              <h3>Details</h3>
               {lastSale && <span className="badge">Ready</span>}
             </div>
 

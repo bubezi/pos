@@ -40,10 +40,7 @@ declare global {
         getById: (saleId: number) => Promise<SaleDetails | null>;
       };
       auth: {
-        login: (payload: {
-          username: string;
-          password: string;
-        }) => Promise<{
+        login: (payload: { username: string; password: string }) => Promise<{
           success: boolean;
           user: AuthUser;
           mustChangePassword: boolean;
@@ -73,6 +70,21 @@ declare global {
         changePassword: (payload: {
           id: number;
           newPassword: string;
+        }) => Promise<{ success: boolean }>;
+        setMustChangePassword: (payload: {
+          id: number;
+          mustChangePassword: boolean;
+        }) => Promise<{ success: boolean }>;
+      };
+      dashboard: {
+        getSummary: () => Promise<DashboardSummary>;
+      };
+      settings: {
+        getSessionTimeout: () => Promise<{
+          sessionTimeoutMinutes: number;
+        }>;
+        setSessionTimeout: (payload: {
+          sessionTimeoutMinutes: number;
         }) => Promise<{ success: boolean }>;
       };
       dev: {
@@ -220,5 +232,41 @@ declare global {
     created_at: string;
     updated_at: string;
     must_change_password: boolean;
+  }
+  interface DashboardSummary {
+    inventory: {
+      totalProducts: number;
+      activeProducts: number;
+      inactiveProducts: number;
+      lowStockProducts: number;
+      outOfStockProducts: number;
+      totalUnits: number;
+      inventoryValue: number;
+    };
+    sales: {
+      today: {
+        count: number;
+        total: number;
+      };
+      thisMonth: {
+        count: number;
+        total: number;
+      };
+      overall: {
+        count: number;
+        total: number;
+      };
+    };
+    recentSales: Array<{
+      id: number;
+      receipt_number: string;
+      total: number;
+      payment_method: string;
+      cashier_name?: string | null;
+      created_at: string;
+    }>;
+    settings: {
+      sessionTimeoutMinutes: number;
+    };
   }
 }

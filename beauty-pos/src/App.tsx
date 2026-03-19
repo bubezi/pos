@@ -7,13 +7,22 @@ import UsersPage from "./pages/UsersPage";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
 import { useAuth } from "./context/AuthContext";
 import "./App.css";
+import { useInactivityTimeout } from "./hooks/useInactivityTimeout";
+import DashboardPage from "./pages/DashboardPage";
 
-type Page = "checkout" | "products" | "sales" | "users" | "account";
+type Page =
+  | "checkout"
+  | "products"
+  | "sales"
+  | "users"
+  | "account"
+  | "dashboard";
 
 function App() {
   const { user, loading, isAuthenticated, isAdmin, logout } = useAuth();
   const [page, setPage] = useState<Page>("checkout");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [timeoutMs, setTimeoutMs] = useState(10 * 60 * 1000);
 
   const mustChangePassword = Boolean(user?.must_change_password);
 
@@ -22,6 +31,30 @@ function App() {
       setPage("account");
     }
   }, [mustChangePassword, page]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    async function loadTimeout() {
+      try {
+        const result = await window.posAPI.settings.getSessionTimeout();
+        setTimeoutMs(result.sessionTimeoutMinutes * 60 * 1000);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    void loadTimeout();
+  }, [isAuthenticated]);
+
+  useInactivityTimeout({
+    enabled: isAuthenticated,
+    timeoutMs,
+    onTimeout: async () => {
+      await window.posAPI.auth.logout();
+      window.location.reload();
+    },
+  });
 
   if (loading) {
     return <div className="app-loading">Loading...</div>;
@@ -39,7 +72,9 @@ function App() {
         ? "checkout"
         : page === "users" && !isAdmin
           ? "checkout"
-          : page;
+          : page === "dashboard" && !isAdmin
+            ? "checkout"
+            : page;
 
   const initials = user?.full_name
     ?.split(" ")
@@ -83,6 +118,19 @@ function App() {
                   <span className="nav-label">Checkout</span>
                 )}
               </button>
+
+              {isAdmin && (
+                <button
+                  className={`nav-button ${visiblePage === "dashboard" ? "active" : ""}`}
+                  onClick={() => setPage("dashboard")}
+                  title="Dashboard"
+                >
+                  <span className="nav-icon">🖥️</span>
+                  {!sidebarCollapsed && (
+                    <span className="nav-label">Dashboard</span>
+                  )}
+                </button>
+              )}
 
               {isAdmin && (
                 <button
@@ -133,7 +181,7 @@ function App() {
             <span className="nav-icon">🔐</span>
             {!sidebarCollapsed && (
               <span className="nav-label">
-                {mustChangePassword ? "Change Password Required" : "Account"}
+                {mustChangePassword ? "Change Required" : "Account"}
               </span>
             )}
           </button>
@@ -195,6 +243,9 @@ function App() {
         )}
         {visiblePage === "users" && isAdmin && !mustChangePassword && (
           <UsersPage />
+        )}
+        {visiblePage === "dashboard" && isAdmin && !mustChangePassword && (
+          <DashboardPage />
         )}
         {visiblePage === "account" && <ChangePasswordPage />}
       </main>

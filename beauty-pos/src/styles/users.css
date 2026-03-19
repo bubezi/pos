@@ -4,7 +4,7 @@
 
 .users-grid {
   display: grid;
-  grid-template-columns: 360px 1fr;
+  grid-template-columns: 360px minmax(0, 1fr);
   gap: 18px;
   align-items: start;
 }
@@ -35,7 +35,7 @@
 .user-card {
   border: 1px solid var(--border);
   border-radius: 16px;
-  padding: 14px;
+  padding: 16px;
   background: rgba(255, 255, 255, 0.02);
   display: flex;
   flex-direction: column;
@@ -49,12 +49,18 @@
   align-items: flex-start;
 }
 
+.user-card-top strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
 .user-status {
   border-radius: 999px;
   padding: 6px 10px;
   font-size: 12px;
   font-weight: 700;
   border: 1px solid var(--border);
+  white-space: nowrap;
 }
 
 .user-status.active {
@@ -68,17 +74,72 @@
 }
 
 .user-card-actions {
-  display: grid;
-  grid-template-columns: 140px 1fr 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.user-card-row {
+  display: flex;
+  flex-wrap: wrap;
   gap: 10px;
+  align-items: center;
+}
+
+.user-card-row .button,
+.user-card-row .input,
+.user-card-row .muted {
+  min-width: 0;
+}
+
+.user-card-row .button {
+  flex: 0 0 auto;
+}
+
+.user-card-row .input {
+  flex: 1 1 180px;
+}
+
+.user-card-row.password-row .input {
+  flex: 1 1 200px;
+}
+
+.user-card-row.password-row .button {
+  flex: 0 0 auto;
+}
+
+.user-card-note {
+  font-size: 14px;
+  color: var(--text-m);
+  padding: 10px 12px;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
 }
 
 @media (max-width: 980px) {
   .users-grid {
     grid-template-columns: 1fr;
   }
+}
 
-  .user-card-actions {
-    grid-template-columns: 1fr;
+@media (max-width: 640px) {
+  .users-page {
+    padding: 16px;
+  }
+
+  .user-card-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .user-card-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .user-card-row .button,
+  .user-card-row .input {
+    width: 100%;
   }
 }

@@ -335,31 +335,29 @@ export default function SalesHistoryPage() {
               </div>
 
               <div className="receipt-actions">
-                <div className="receipt-actions">
-                  <button
-                    className="button secondary"
-                    onClick={() => void handleViewReceipt()}
-                    disabled={!selectedSale}
-                  >
-                    Preview Receipt
-                  </button>
+                <button
+                  className="button secondary"
+                  onClick={() => void handleViewReceipt()}
+                  disabled={!selectedSale}
+                >
+                  Preview Receipt
+                </button>
 
-                  <button
-                    className="button"
-                    onClick={() => void handlePrintReceipt()}
-                    disabled={!selectedSale}
-                  >
-                    Print Receipt
-                  </button>
+                <button
+                  className="button"
+                  onClick={() => void handlePrintReceipt()}
+                  disabled={!selectedSale}
+                >
+                  Print Receipt
+                </button>
 
-                  <button
-                    className="button secondary"
-                    onClick={() => void handleSavePdf()}
-                    disabled={!selectedSale}
-                  >
-                    Save PDF
-                  </button>
-                </div>
+                <button
+                  className="button secondary"
+                  onClick={() => void handleSavePdf()}
+                  disabled={!selectedSale}
+                >
+                  Save PDF
+                </button>
               </div>
 
               {selectedSale.notes && (

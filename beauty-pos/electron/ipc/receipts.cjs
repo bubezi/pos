@@ -151,7 +151,7 @@ function buildReceiptHtml(data) {
       <body>
         <div class="center">
           <div class="store-name">WigsnStyle</div>
-          <div class="subtitle">Point of Sale Receipt</div>
+          <div class="subtitle">Receipt</div>
         </div>
 
         <hr />

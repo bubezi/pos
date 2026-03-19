@@ -1,0 +1,134 @@
+.dashboard-page {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  text-align: left;
+}
+
+.dashboard-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.section-header h2 {
+  margin: 0;
+  color: var(--text-h);
+  font-size: 1.1rem;
+}
+
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.dashboard-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dashboard-card.wide {
+  grid-column: span 2;
+}
+
+.dashboard-card span {
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.dashboard-card strong {
+  color: var(--text-h);
+  font-size: 1.5rem;
+}
+
+.dashboard-card small {
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.dashboard-card.warning {
+  background: rgba(255, 193, 7, 0.08);
+}
+
+.dashboard-card.danger {
+  background: rgba(220, 38, 38, 0.08);
+}
+
+.dashboard-two-column {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 16px;
+}
+
+.recent-sales-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.recent-sale-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--panel-2);
+}
+
+.recent-sale-right {
+  text-align: right;
+}
+
+.settings-block {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.settings-label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-label span {
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .dashboard-two-column {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-card.wide {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 720px) {
+  .dashboard-page {
+    padding: 16px;
+  }
+
+  .dashboard-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .recent-sale-item {
+    flex-direction: column;
+  }
+
+  .recent-sale-right {
+    text-align: left;
+  }
+}

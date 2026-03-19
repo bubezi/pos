@@ -29,7 +29,7 @@ export default function LoginPage() {
       <div className="login-shell">
         <section className="login-hero">
           <div className="login-brand-badge">W</div>
-          <h1>WigsnStyle POS</h1>
+          <h1>WigsnStyle</h1>
           <p>
             Fast checkout, stock control, receipts, and staff access management.
           </p>

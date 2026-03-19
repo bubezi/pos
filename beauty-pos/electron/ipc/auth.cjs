@@ -315,7 +315,7 @@ function registerAuthHandlers() {
   });
 
   ipcMain.handle("users:change-password", async (_, payload) => {
-    requireAdmin();
+    const session = requireAdmin();
 
     const id = Number(payload?.id);
     const newPassword = String(payload?.newPassword || "");
@@ -333,22 +333,27 @@ function registerAuthHandlers() {
       throw new Error("User not found");
     }
 
+    if (session.id === id) {
+      throw new Error(
+        "You cannot reset your own password from the Users page. Use the Account page instead.",
+      );
+    }
+
+    if (user.role === "admin") {
+      throw new Error("You cannot reset another admin's password.");
+    }
+
     const passwordHash = hashPassword(newPassword);
 
     db.prepare(
       `
       UPDATE users
       SET password_hash = ?,
-          must_change_password = 0,
+          must_change_password = 1,
           updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `,
     ).run(passwordHash, id);
-
-    if (currentSession && currentSession.id === id) {
-      const freshUser = getUserById(id);
-      currentSession = sanitizeUser(freshUser);
-    }
 
     return { success: true };
   });
@@ -406,6 +411,39 @@ function registerAuthHandlers() {
       success: true,
       user: currentSession,
     };
+  });
+
+  ipcMain.handle("users:set-must-change-password", async (_, payload) => {
+    const session = requireAdmin();
+
+    const id = Number(payload?.id);
+    const mustChangePassword = Boolean(payload?.mustChangePassword);
+
+    if (!id) {
+      throw new Error("User ID is required");
+    }
+
+    const user = getUserById(id);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (session.id === id) {
+      throw new Error(
+        "You cannot force your own account to change password from the Users page.",
+      );
+    }
+
+    db.prepare(
+      `
+      UPDATE users
+      SET must_change_password = ?,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `,
+    ).run(mustChangePassword ? 1 : 0, id);
+
+    return { success: true };
   });
 }
 

@@ -1,0 +1,2 @@
+-- No-op migration.
+-- updated_at is not required by the app anymore.
