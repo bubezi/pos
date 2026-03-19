@@ -6,6 +6,9 @@ on:
 jobs:
   build-win:
     runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: beauty-pos
 
     steps:
       - name: Checkout
@@ -16,6 +19,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: beauty-pos/package-lock.json
 
       - name: Show files
         run: dir
@@ -37,5 +41,5 @@ jobs:
         with:
           name: wigsnstyle-pos-windows-installer
           path: |
-            dist/*.exe
-            dist/*.blockmap
+            beauty-pos/dist/*.exe
+            beauty-pos/dist/*.blockmap
