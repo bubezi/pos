@@ -17,6 +17,9 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Show files
+        run: dir
+
       - name: Install dependencies without scripts
         run: npm ci --ignore-scripts
 
