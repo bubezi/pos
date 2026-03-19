@@ -34,6 +34,7 @@ export default function ChangePasswordPage() {
       setNewPassword("");
       setConfirmPassword("");
       setMessage("Password changed successfully.");
+      window.location.reload();
     } catch (error) {
       console.error(error);
       setMessage(
