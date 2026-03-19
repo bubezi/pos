@@ -3,6 +3,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import { Menu } from "electron";
+
+const { globalShortcut } = require("electron");
 const require = createRequire(import.meta.url);
 
 const __filename = fileURLToPath(import.meta.url);
@@ -100,6 +102,10 @@ function createWindow() {
 app.setName("WigsnStyle Point of Sale System");
 
 app.whenReady().then(() => {
+  globalShortcut.register("Control+Shift+I", () => {
+    BrowserWindow.getFocusedWindow()?.webContents.openDevTools();
+  });
+
   registerAuthHandlers();
   registerProductHandlers();
   registerCheckoutHandlers();
@@ -115,6 +121,7 @@ app.whenReady().then(() => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });
+
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
