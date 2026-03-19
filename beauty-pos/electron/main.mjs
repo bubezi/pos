@@ -21,6 +21,7 @@ const { registerDevToolHandlers } = require("./ipc/dev-tools.cjs");
 const { registerSalesHandlers } = require("./ipc/sales.cjs");
 const { registerDashboardHandlers } = require("./ipc/dashboard.cjs");
 const { registerAuditHandlers } = require("./ipc/audit.cjs");
+const { registerReportHandlers } = require("./ipc/reports.cjs");
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -51,6 +52,7 @@ app.whenReady().then(() => {
   registerSalesHandlers();
   registerDashboardHandlers();
   registerAuditHandlers();
+  registerReportHandlers();
   createWindow();
 
   app.on("activate", () => {

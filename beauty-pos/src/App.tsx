@@ -10,6 +10,7 @@ import "./App.css";
 import { useInactivityTimeout } from "./hooks/useInactivityTimeout";
 import DashboardPage from "./pages/DashboardPage";
 import AuditLogsPage from "./pages/AuditLogsPage";
+import ReportsPage from "./pages/ReportsPage";
 
 type Page =
   | "checkout"
@@ -18,6 +19,7 @@ type Page =
   | "users"
   | "account"
   | "dashboard"
+  | "reports"
   | "logs";
 
 function App() {
@@ -78,7 +80,9 @@ function App() {
             ? "checkout"
             : page === "logs" && !isAdmin
               ? "checkout"
-              : page;
+              : page === "reports" && !isAdmin
+                ? "checkout"
+                : page;
 
   const initials = user?.full_name
     ?.split(" ")
@@ -179,11 +183,24 @@ function App() {
                 <button
                   className={`nav-button ${visiblePage === "logs" ? "active" : ""}`}
                   onClick={() => setPage("logs")}
-                  title="Audi Logs"
+                  title="Audit Logs"
                 >
                   <span className="nav-icon">📜</span>
                   {!sidebarCollapsed && (
                     <span className="nav-label">Audit Logs</span>
+                  )}
+                </button>
+              )}
+
+              {isAdmin && (
+                <button
+                  className={`nav-button ${visiblePage === "reports" ? "active" : ""}`}
+                  onClick={() => setPage("reports")}
+                  title="Reports"
+                >
+                  <span className="nav-icon">🧾</span>
+                  {!sidebarCollapsed && (
+                    <span className="nav-label">Reports</span>
                   )}
                 </button>
               )}
@@ -266,7 +283,10 @@ function App() {
         )}
         {visiblePage === "logs" && isAdmin && !mustChangePassword && (
           <AuditLogsPage />
-        )}        
+        )}
+        {visiblePage === "reports" && isAdmin && !mustChangePassword && (
+          <ReportsPage />
+        )}
         {visiblePage === "account" && <ChangePasswordPage />}
       </main>
     </div>

@@ -95,6 +95,29 @@ declare global {
           usernames: string[];
         }>;
       };
+
+      reports: {
+        getLowStock: () => Promise<ReportProductRow[]>;
+        getZeroStock: () => Promise<ReportProductRow[]>;
+        getStockList: () => Promise<ReportProductRow[]>;
+        getSales: (payload?: {
+          dateFrom?: string;
+          dateTo?: string;
+          cashier?: string;
+        }) => Promise<{
+          rows: ReportSaleRow[];
+          summary: SalesReportSummary;
+        }>;
+        getSalesFilters: () => Promise<{
+          cashiers: string[];
+        }>;
+        savePdf: (payload?: {
+          tab?: "low-stock" | "zero-stock" | "stock-list" | "sales";
+          dateFrom?: string;
+          dateTo?: string;
+          cashier?: string;
+        }) => Promise<{ success: boolean; filePath?: string }>;
+      };
       dev: {
         seedProducts: () => Promise<{ success: boolean }>;
       };
@@ -306,4 +329,36 @@ declare global {
       totalPages: number;
     };
   }
+  type ReportProductRow = {
+    id: number;
+    sku: string;
+    name: string;
+    category: string | null;
+    price: number;
+    stock_qty: number;
+    reorder_level: number;
+    is_active: number;
+    updated_at: string;
+  };
+
+  type ReportSaleRow = {
+    id: number;
+    receipt_number: string;
+    subtotal: number;
+    discount: number;
+    total: number;
+    amount_paid: number;
+    change_due: number;
+    payment_method: string;
+    cashier_name: string | null;
+    notes: string | null;
+    created_at: string;
+  };
+
+  type SalesReportSummary = {
+    total_sales: number;
+    subtotal_sum: number;
+    discount_sum: number;
+    total_sum: number;
+  };
 }

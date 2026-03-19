@@ -75,6 +75,14 @@ contextBridge.exposeInMainWorld("posAPI", {
     list: (payload) => invoke("audit:list", payload),
     getFilters: () => invoke("audit:get-filters"),
   },
+  reports: {
+    getLowStock: () => invoke("reports:low-stock"),
+    getZeroStock: () => invoke("reports:zero-stock"),
+    getStockList: () => invoke("reports:stock-list"),
+    getSales: (payload) => invoke("reports:sales", payload),
+    getSalesFilters: () => invoke("reports:sales-filters"),
+    savePdf: (payload) => invoke("reports:savePdf", payload),
+  },
   dev: {
     seedProducts: () => invoke("dev:seedProducts"),
   },
