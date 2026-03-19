@@ -159,6 +159,8 @@ function registerDashboardHandlers() {
       throw new Error("Session timeout must be between 1 and 240 minutes.");
     }
 
+    const oldValue = Number(getSetting("session_timeout_minutes", "10"));
+
     db.prepare(
       `
   INSERT INTO app_settings (key, value)
@@ -168,7 +170,16 @@ function registerDashboardHandlers() {
     value = excluded.value
 `,
     ).run(String(sessionTimeoutMinutes));
-
+    writeAuditLog({
+      session,
+      action: "update_setting",
+      entityType: "app_setting",
+      entityId: "session_timeout_minutes",
+      details: {
+        before: oldValue,
+        after: sessionTimeoutMinutes,
+      },
+    });
     return { success: true };
   });
 }

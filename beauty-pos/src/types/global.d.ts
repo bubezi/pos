@@ -87,6 +87,14 @@ declare global {
           sessionTimeoutMinutes: number;
         }) => Promise<{ success: boolean }>;
       };
+      audit: {
+        list: (payload?: AuditLogListFilters) => Promise<AuditLogListResponse>;
+        getFilters: () => Promise<{
+          actions: string[];
+          entityTypes: string[];
+          usernames: string[];
+        }>;
+      };
       dev: {
         seedProducts: () => Promise<{ success: boolean }>;
       };
@@ -267,6 +275,35 @@ declare global {
     }>;
     settings: {
       sessionTimeoutMinutes: number;
+    };
+  }
+  interface AuditLogEntry {
+    id: number;
+    user_id?: number | null;
+    username?: string | null;
+    action: string;
+    entity_type: string;
+    entity_id?: string | null;
+    details_json?: string | null;
+    details?: unknown;
+    created_at: string;
+  }
+
+  interface AuditLogListFilters {
+    page?: number;
+    pageSize?: number;
+    username?: string;
+    action?: string;
+    entityType?: string;
+  }
+
+  interface AuditLogListResponse {
+    data: AuditLogEntry[];
+    pagination: {
+      page: number;
+      pageSize: number;
+      total: number;
+      totalPages: number;
     };
   }
 }

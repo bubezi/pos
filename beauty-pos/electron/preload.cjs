@@ -71,6 +71,10 @@ contextBridge.exposeInMainWorld("posAPI", {
     setSessionTimeout: (payload) =>
       invoke("settings:set-session-timeout", payload),
   },
+  audit: {
+    list: (payload) => invoke("audit:list", payload),
+    getFilters: () => invoke("audit:get-filters"),
+  },
   dev: {
     seedProducts: () => invoke("dev:seedProducts"),
   },

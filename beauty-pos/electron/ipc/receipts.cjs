@@ -1,5 +1,6 @@
 const { ipcMain, BrowserWindow, dialog } = require("electron");
 const { requireAuth } = require("./auth.cjs");
+const { writeAuditLog } = require("../audit.cjs");
 
 const fs = require("fs");
 const db = require("../db.cjs");
@@ -251,7 +252,7 @@ function registerReceiptHandlers() {
   });
 
   ipcMain.handle("receipts:print", async (_, saleId) => {
-    requireAuth();
+    const session = requireAuth();
     const { win } = await createReceiptWindow(saleId, { show: true });
 
     win.webContents.print(
@@ -262,6 +263,16 @@ function registerReceiptHandlers() {
       (success, errorType) => {
         if (success) {
           markPrintedInternal(saleId);
+
+          writeAuditLog({
+            session,
+            action: "print_receipt",
+            entityType: "receipt",
+            entityId: saleId,
+            details: {
+              saleId,
+            },
+          });
         } else {
           console.error("Receipt printing failed:", errorType);
         }
@@ -272,7 +283,7 @@ function registerReceiptHandlers() {
   });
 
   ipcMain.handle("receipts:savePdf", async (_, saleId) => {
-    requireAuth();
+    const session = requireAuth();
     const { win, data } = await createReceiptWindow(saleId, { show: false });
 
     try {
@@ -295,6 +306,18 @@ function registerReceiptHandlers() {
       });
 
       fs.writeFileSync(saveResult.filePath, pdfBuffer);
+      
+      writeAuditLog({
+        session,
+        action: "save_receipt_pdf",
+        entityType: "receipt",
+        entityId: saleId,
+        details: {
+          saleId,
+          receiptNumber: data.sale.receipt_number,
+          filePath: saveResult.filePath,
+        },
+      });
 
       if (!win.isDestroyed()) win.close();
 

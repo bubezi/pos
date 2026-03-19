@@ -9,6 +9,7 @@ import { useAuth } from "./context/AuthContext";
 import "./App.css";
 import { useInactivityTimeout } from "./hooks/useInactivityTimeout";
 import DashboardPage from "./pages/DashboardPage";
+import AuditLogsPage from "./pages/AuditLogsPage";
 
 type Page =
   | "checkout"
@@ -16,7 +17,8 @@ type Page =
   | "sales"
   | "users"
   | "account"
-  | "dashboard";
+  | "dashboard"
+  | "logs";
 
 function App() {
   const { user, loading, isAuthenticated, isAdmin, logout } = useAuth();
@@ -74,7 +76,9 @@ function App() {
           ? "checkout"
           : page === "dashboard" && !isAdmin
             ? "checkout"
-            : page;
+            : page === "logs" && !isAdmin
+              ? "checkout"
+              : page;
 
   const initials = user?.full_name
     ?.split(" ")
@@ -170,6 +174,19 @@ function App() {
                   )}
                 </button>
               )}
+
+              {isAdmin && (
+                <button
+                  className={`nav-button ${visiblePage === "logs" ? "active" : ""}`}
+                  onClick={() => setPage("logs")}
+                  title="Audi Logs"
+                >
+                  <span className="nav-icon">📜</span>
+                  {!sidebarCollapsed && (
+                    <span className="nav-label">Audit Logs</span>
+                  )}
+                </button>
+              )}
             </>
           )}
 
@@ -247,6 +264,9 @@ function App() {
         {visiblePage === "dashboard" && isAdmin && !mustChangePassword && (
           <DashboardPage />
         )}
+        {visiblePage === "logs" && isAdmin && !mustChangePassword && (
+          <AuditLogsPage />
+        )}        
         {visiblePage === "account" && <ChangePasswordPage />}
       </main>
     </div>

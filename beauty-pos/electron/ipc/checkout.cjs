@@ -1,6 +1,7 @@
 const { ipcMain } = require("electron");
 const { requireAuth } = require("./auth.cjs");
 const db = require("../db.cjs");
+const { writeAuditLog } = require("../audit.cjs");
 
 function generateReceiptNumber() {
   const now = new Date();
@@ -126,6 +127,18 @@ function registerCheckoutHandlers() {
       `);
 
       insertReceiptStmt.run(saleId);
+      writeAuditLog({
+        user,
+        action: "complete_sale",
+        entityType: "sale",
+        entityId: saleId,
+        details: {
+          receiptNumber,
+          total,
+          paymentMethod,
+          itemCount: items.length,
+        },
+      });
 
       return {
         success: true,
@@ -138,7 +151,6 @@ function registerCheckoutHandlers() {
         changeDue,
       };
     });
-
     return tx();
   });
 }

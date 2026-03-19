@@ -1,6 +1,7 @@
 const { ipcMain } = require("electron");
 const db = require("../db.cjs");
 const { hashPassword, verifyPassword } = require("../auth.cjs");
+const { writeAuditLog } = require("../audit.cjs");
 
 let currentSession = null;
 
@@ -123,6 +124,17 @@ function registerAuthHandlers() {
     }
 
     currentSession = sanitizeUser(user);
+    writeAuditLog({
+      session: currentSession,
+      action: "login_success",
+      entityType: "auth",
+      entityId: user.id,
+      details: {
+        userId: user.id,
+        username: user.username,
+        role: user.role,
+      },
+    });
 
     return {
       success: true,
@@ -132,6 +144,21 @@ function registerAuthHandlers() {
   });
 
   ipcMain.handle("auth:logout", async () => {
+    const session = currentSession;
+
+    if (session) {
+      writeAuditLog({
+        session,
+        action: "logout",
+        entityType: "auth",
+        entityId: session.id,
+        details: {
+          userId: session.id,
+          username: session.username,
+          role: session.role,
+        },
+      });
+    }
     currentSession = null;
     return { success: true };
   });
@@ -165,7 +192,7 @@ function registerAuthHandlers() {
   });
 
   ipcMain.handle("users:create", async (_, payload) => {
-    requireAdmin();
+    const session = requireAdmin();
 
     const fullName = String(payload?.fullName || "").trim();
     const usernameRaw = String(payload?.username || "");
@@ -220,6 +247,20 @@ function registerAuthHandlers() {
         )
         .run(fullName, username, passwordHash, role);
 
+      writeAuditLog({
+        session,
+        action: "create_user",
+        entityType: "user",
+        entityId: result.lastInsertRowid,
+        details: {
+          targetUserId: result.lastInsertRowid,
+          fullName,
+          username,
+          role,
+          isActive: true,
+          mustChangePassword: false,
+        },
+      });
       return {
         success: true,
         id: result.lastInsertRowid,
@@ -300,11 +341,40 @@ function registerAuthHandlers() {
       `,
       ).run(fullName, username, role, isActive, id);
 
+      let action = "update_user";
+
+      if (existingUser.is_active === 0 && isActive === 1) {
+        action = "activate_user";
+      } else if (existingUser.is_active === 1 && isActive === 0) {
+        action = "deactivate_user";
+      }
+
+      writeAuditLog({
+        session,
+        action,
+        entityType: "user",
+        entityId: id,
+        details: {
+          targetUserId: id,
+          before: {
+            full_name: existingUser.full_name,
+            username: existingUser.username,
+            role: existingUser.role,
+            is_active: existingUser.is_active,
+          },
+          after: {
+            full_name: fullName,
+            username,
+            role,
+            is_active: isActive,
+          },
+        },
+      });
+
       if (currentSession && currentSession.id === id) {
         const freshUser = getUserById(id);
         currentSession = sanitizeUser(freshUser);
       }
-
       return { success: true };
     } catch (error) {
       if (isDuplicateUsernameError(error)) {
@@ -355,6 +425,17 @@ function registerAuthHandlers() {
     `,
     ).run(passwordHash, id);
 
+    writeAuditLog({
+      session,
+      action: "reset_password",
+      entityType: "user",
+      entityId: id,
+      details: {
+        targetUserId: id,
+        targetRole: user.role,
+        mustChangePassword: true,
+      },
+    });
     return { success: true };
   });
 
@@ -404,6 +485,17 @@ function registerAuthHandlers() {
     `,
     ).run(passwordHash, session.id);
 
+    writeAuditLog({
+      session,
+      action: "change_own_password",
+      entityType: "user",
+      entityId: session.id,
+      details: {
+        targetUserId: session.id,
+        username: session.username,
+      },
+    });
+
     const freshUser = getUserById(session.id);
     currentSession = sanitizeUser(freshUser);
 
@@ -443,6 +535,18 @@ function registerAuthHandlers() {
     `,
     ).run(mustChangePassword ? 1 : 0, id);
 
+    writeAuditLog({
+      session,
+      action: mustChangePassword
+        ? "force_password_change"
+        : "clear_forced_password_change",
+      entityType: "user",
+      entityId: id,
+      details: {
+        targetUserId: id,
+        targetUsername: user.username,
+      },
+    });
     return { success: true };
   });
 }

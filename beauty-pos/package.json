@@ -1,7 +1,7 @@
 {
   "name": "beauty-pos",
   "private": true,
-  "version": "0.0.1",
+  "version": "1.0.1",
   "type": "module",
   "main": "electron/main.mjs",
   "scripts": {
@@ -38,15 +38,16 @@
     "wait-on": "^9.0.4"
   },
   "build": {
-    "appId": "com.bubezi.beautypos",
-    "productName": "BeautyPOS",
+    "appId": "com.wigsnstyle.pos",
+    "productName": "Wigsnstyle POS",
     "files": [
       "dist/**/*",
       "electron/**/*",
       "package.json"
     ],
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "artifactName": "${productName}-Setup-${version}.${ext}"
     }
   }
 }
