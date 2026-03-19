@@ -48,7 +48,6 @@ function runMigrations() {
     const fullPath = path.join(migrationsDir, file);
     const sql = fs.readFileSync(fullPath, "utf8");
 
-    console.log(`[db] Running migration: ${file}`);
 
     try {
       const transaction = db.transaction(() => {
@@ -57,9 +56,7 @@ function runMigrations() {
       });
 
       transaction();
-      console.log(`[db] Applied migration: ${file}`);
     } catch (error) {
-      console.error(`[db] Failed migration: ${file}`);
       throw error;
     }
   }
@@ -103,11 +100,6 @@ function ensureDefaultAdmin() {
     VALUES (?, ?, ?, ?, 1, 1)
   `,
   ).run("System Admin", username, passwordHash, "admin");
-
-  console.log("[auth] Default admin created");
-  console.log("[auth] username: admin");
-  console.log("[auth] password: admin123");
-  console.log("[auth] Change this password immediately.");
 }
 
 runMigrations();

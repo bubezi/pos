@@ -291,15 +291,6 @@ export default function CheckoutPage() {
 
   return (
     <div className="checkout-page checkout-page-single">
-      <header className="topbar">
-        <div>
-          <h1>WigsnStyle Checkout</h1>
-          <p className="muted">
-            Scan barcode or search by name, SKU, or category.
-          </p>
-        </div>
-      </header>
-
       <section className="scan-panel">
         <div className="scan-input-wrap search-box" ref={searchBoxRef}>
           <label htmlFor="productSearch" className="label">
@@ -388,13 +379,13 @@ export default function CheckoutPage() {
 
       {message && <div className="alert">{message}</div>}
 
-      <section className="panel cart-panel cart-panel-wide">
+      <section className="panel cart-panel">
         <div className="panel-header">
           <h2>Cart</h2>
           <span className="badge">{totalItems} pcs</span>
         </div>
 
-        <div className="cart-list">
+        <div className="cart-list cart-list-scroll">
           {cart.length === 0 && <p className="empty">Cart is empty.</p>}
 
           {cart.map((item) => (
@@ -448,107 +439,116 @@ export default function CheckoutPage() {
             </article>
           ))}
         </div>
+      </section>
 
-        <div className="checkout-bottom-grid">
-          <div className="summary-card">
-            <div className="summary-row">
-              <span>Items</span>
-              <strong>{totalItems}</strong>
-            </div>
-
-            <div className="summary-row">
-              <span>Total</span>
-              <strong>KES {subtotal.toFixed(2)}</strong>
-            </div>
-
-            <div className="summary-row">
-              <label htmlFor="amountPaid">Amount paid</label>
-              <input
-                id="amountPaid"
-                className="input"
-                type="number"
-                inputMode="decimal"
-                placeholder="Enter amount"
-                value={amountPaid}
-                onChange={(e) => setAmountPaid(e.target.value)}
-                min={0}
-              />
-            </div>
-
-            <div className="summary-row">
-              <span>Remaining</span>
-              <strong>KES {balanceDue.toFixed(2)}</strong>
-            </div>
-
-            <div className="summary-row">
-              <span>Change</span>
-              <strong>KES {changeDue.toFixed(2)}</strong>
-            </div>
-
-            <button
-              className="button checkout-button"
-              onClick={() => void handleCheckout()}
-              disabled={cart.length === 0 || amountPaidValue < subtotal}
-            >
-              Complete Sale
-            </button>
+      <section className="checkout-bottom-grid">
+        <div className="panel payment-card">
+          <div className="panel-header">
+            <h2>Payment</h2>
+            <span className="badge">{totalItems} pcs</span>
           </div>
 
-          <div className="receipt-card">
-            <div className="panel-header receipt-header">
-              <h3>Details</h3>
-              {lastSale && <span className="badge">Ready</span>}
+          <div className="summary-row">
+            <span>Items</span>
+            <strong>{totalItems}</strong>
+          </div>
+
+          <div className="summary-row">
+            <span>Total</span>
+            <strong>KES {subtotal.toFixed(2)}</strong>
+          </div>
+
+          <div className="payment-row">
+            <label htmlFor="amountPaid" className="label">
+              Amount paid
+            </label>
+            <input
+              id="amountPaid"
+              className="input"
+              type="number"
+              inputMode="decimal"
+              placeholder="Enter amount"
+              value={amountPaid}
+              onChange={(e) => setAmountPaid(e.target.value)}
+              min={0}
+            />
+          </div>
+
+          <div className="summary-row">
+            <span>Remaining</span>
+            <strong>KES {balanceDue.toFixed(2)}</strong>
+          </div>
+
+          <div className="summary-row">
+            <span>Change</span>
+            <strong>KES {changeDue.toFixed(2)}</strong>
+          </div>
+
+          <button
+            className="button checkout-button"
+            onClick={() => void handleCheckout()}
+            disabled={cart.length === 0 || amountPaidValue < subtotal}
+          >
+            Complete Sale
+          </button>
+        </div>
+
+        <div className="panel receipt-card">
+          <div className="panel-header receipt-header">
+            <h2>Last Sale</h2>
+            {lastSale && <span className="badge">Ready</span>}
+          </div>
+
+          <div className="receipt-details">
+            <div className="summary-row">
+              <span>Change</span>
+              <strong>
+                KES {(lastSale?.changeDue ?? changeDue).toFixed(2)}
+              </strong>
             </div>
 
-            <div className="receipt-details">
-              <div className="summary-row">
-                <span>Change</span>
-                <strong>KES {changeDue.toFixed(2)}</strong>
-              </div>
-
-              <div className="summary-row">
-                <span>Last receipt</span>
-                <strong>{lastSale?.receiptNumber || "-"}</strong>
-              </div>
-
-              <div className="summary-row">
-                <span>Paid</span>
-                <strong>
-                  KES {(lastSale?.amountPaid ?? amountPaidValue).toFixed(2)}
-                </strong>
-              </div>
-
-              <div className="summary-row">
-                <span>Sale total</span>
-                <strong>KES {(lastSale?.total ?? subtotal).toFixed(2)}</strong>
-              </div>
+            <div className="summary-row">
+              <span>Last receipt</span>
+              <strong>{lastSale?.receiptNumber || "-"}</strong>
             </div>
 
-            <div className="receipt-actions">
-              <button
-                className="button secondary"
-                onClick={() => void handleViewReceipt()}
-                disabled={!lastSale}
-              >
-                Preview Receipt
-              </button>
-
-              <button
-                className="button"
-                onClick={() => void handlePrintReceipt()}
-                disabled={!lastSale}
-              >
-                Print Receipt
-              </button>
-
-              <button
-                className="button secondary"
-                onClick={() => void handleSavePdf()}
-                disabled={!lastSale}
-              >
-                Save PDF
-              </button>
+            <div className="summary-row">
+              <span>Paid</span>
+              <strong>
+                KES {(lastSale?.amountPaid ?? amountPaidValue).toFixed(2)}
+              </strong>
             </div>
+
+            <div className="summary-row">
+              <span>Sale total</span>
+              <strong>KES {(lastSale?.total ?? subtotal).toFixed(2)}</strong>
+            </div>
+          </div>
+
+          <div className="receipt-actions">
+            <button
+              className="button secondary"
+              onClick={() => void handleViewReceipt()}
+              disabled={!lastSale}
+            >
+              Preview Receipt
+            </button>
+
+            <button
+              className="button"
+              onClick={() => void handlePrintReceipt()}
+              disabled={!lastSale}
+            >
+              Print Receipt
+            </button>
+
+            <button
+              className="button secondary"
+              onClick={() => void handleSavePdf()}
+              disabled={!lastSale}
+            >
+              Save PDF
+            </button>
           </div>
         </div>
       </section>

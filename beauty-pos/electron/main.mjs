@@ -2,7 +2,7 @@ import { app, BrowserWindow } from "electron";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
-
+import { Menu } from "electron";
 const require = createRequire(import.meta.url);
 
 const __filename = fileURLToPath(import.meta.url);
@@ -27,6 +27,53 @@ function getWindowIcon() {
 
   return path.join(__dirname, "../build/icon.png");
 }
+
+const template = [
+  {
+    label: "File",
+    submenu: [
+      { role: "quit" },
+    ],
+  },
+  {
+    label: "Edit",
+    submenu: [
+      { role: "undo" },
+      { role: "redo" },
+      { type: "separator" },
+      { role: "cut" },
+      { role: "copy" },
+      { role: "paste" },
+      { role: "delete" },
+      { type: "separator" },
+      { role: "selectAll" },
+    ],
+  },
+  {
+    label: "View",
+    submenu: [
+      { role: "reload" },
+      { type: "separator" },
+      { role: "resetzoom" },
+      { role: "zoomin" },
+      { role: "zoomout" },
+      { type: "separator" },
+      { role: "togglefullscreen" },
+    ],
+  },
+  {
+    label: "Window",
+    submenu: [
+      { role: "minimize" },
+      { type: "separator" },
+      { role: "resetzoom" },
+      { role: "zoom" },
+      { role: "close" },
+    ],
+  },
+];
+const menu = Menu.buildFromTemplate(template);
+Menu.setApplicationMenu(menu);
 
 function createWindow() {
   const win = new BrowserWindow({

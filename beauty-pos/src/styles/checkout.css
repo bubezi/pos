@@ -6,10 +6,6 @@
   text-align: left;
 }
 
-.checkout-page-single {
-  max-width: 1100px;
-}
-
 .topbar {
   display: flex;
   justify-content: space-between;
@@ -31,10 +27,6 @@
 .topbar-actions {
   display: flex;
   gap: 12px;
-}
-
-.cart-panel-wide {
-  min-height: 520px;
 }
 
 .scan-panel {
@@ -106,8 +98,7 @@
 
 .button.secondary {
   background: transparent;
-  color: var(--text-h);
-  border-color: var(--border);
+  border: 1px solid currentColor;
 }
 
 .button.danger {
@@ -274,15 +265,6 @@
   color: var(--text-h);
 }
 
-.summary-card {
-  margin-top: auto;
-  border-top: 1px solid var(--border);
-  padding-top: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
 .summary-row {
   display: flex;
   justify-content: space-between;
@@ -303,27 +285,6 @@
   border: 1px dashed var(--border);
   border-radius: 14px;
   color: var(--text);
-}
-
-@media (max-width: 960px) {
-  .checkout-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .product-card,
-  .cart-card {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .cart-controls {
-    justify-content: flex-start;
-  }
-
-  .line-total {
-    text-align: left;
-    min-width: unset;
-  }
 }
 
 .search-box {
@@ -398,24 +359,33 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
-  margin-top: 18px;
-  align-items: start;
+  align-items: stretch;
 }
 
-.receipt-card,
-.summary-card {
-  height: 100%;
+.payment-card,
+.receipt-card {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.payment-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .receipt-card {
-  background: var(--panel-2);
-  border: 1px solid var(--border, #e5e7eb);
-  border-radius: 14px;
-  padding: 16px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: var(--shadow);
 }
 
 .receipt-header {
-  margin-bottom: 12px;
+  margin-bottom: 0;
 }
 
 .receipt-details {
@@ -426,13 +396,46 @@
 
 .receipt-actions {
   display: flex;
-  gap: 12px;
-  margin-top: 18px;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: auto;
 }
 
-.button.secondary {
-  background: transparent;
-  border: 1px solid currentColor;
+.receipt-actions .button {
+  width: 100%;
+}
+
+.cart-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.cart-list-scroll {
+  max-height: min(380px, 42vh);
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-gutter: stable;
+}
+
+@media (max-width: 960px) {
+  .checkout-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .product-card,
+  .cart-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cart-controls {
+    justify-content: flex-start;
+  }
+
+  .line-total {
+    text-align: left;
+    min-width: unset;
+  }
 }
 
 @media (max-width: 900px) {
