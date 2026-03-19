@@ -4,8 +4,8 @@ import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import { Menu } from "electron";
 
-const { globalShortcut } = require("electron");
 const require = createRequire(import.meta.url);
+const { globalShortcut } = require("electron");
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

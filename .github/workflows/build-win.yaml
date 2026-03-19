@@ -1,4 +1,4 @@
-name: Build Windows Installer 2
+name: Build Windows Installer New
 
 on:
   workflow_dispatch:
@@ -39,7 +39,7 @@ jobs:
       - name: Upload installer artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: wigsnstyle-pos-windows-installer
+          name: wigsnstyle-pos-windows-installer-new
           path: |
             beauty-pos/dist/*.exe
             beauty-pos/dist/*.blockmap
