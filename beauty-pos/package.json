@@ -40,6 +40,9 @@
   "build": {
     "appId": "com.wigsnstyle.pos",
     "productName": "Wigsnstyle POS",
+    "directories": {
+      "buildResources": "build"
+    },
     "files": [
       "dist/**/*",
       "electron/**/*",
@@ -47,6 +50,7 @@
     ],
     "win": {
       "target": "nsis",
+      "icon": "build/icon.ico",
       "artifactName": "${productName}-Setup-${version}.${ext}"
     }
   }

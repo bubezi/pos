@@ -8,9 +8,6 @@ const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-console.log("[main] __dirname =", __dirname);
-console.log("[main] preload path =", path.join(__dirname, "preload.cjs"));
-
 require("./db.cjs");
 
 const { registerAuthHandlers } = require("./ipc/auth.cjs");
@@ -23,10 +20,22 @@ const { registerDashboardHandlers } = require("./ipc/dashboard.cjs");
 const { registerAuditHandlers } = require("./ipc/audit.cjs");
 const { registerReportHandlers } = require("./ipc/reports.cjs");
 
+function getWindowIcon() {
+  if (process.platform === "win32") {
+    return path.join(__dirname, "../build/icon.ico");
+  }
+
+  return path.join(__dirname, "../build/icon.png");
+}
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1200,
     height: 800,
+    minWidth: 1100,
+    minHeight: 700,
+    title: "WigsnStyle POS",
+    icon: getWindowIcon(),
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,
@@ -41,7 +50,7 @@ function createWindow() {
   }
 }
 
-app.setName("WigsnStyle POS");
+app.setName("WigsnStyle Point of Sale System");
 
 app.whenReady().then(() => {
   registerAuthHandlers();
