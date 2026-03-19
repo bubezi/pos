@@ -1,5 +1,5 @@
 const { ipcMain, BrowserWindow, dialog } = require("electron");
-const { requireAuth } = require('./auth.cjs');
+const { requireAuth } = require("./auth.cjs");
 
 const fs = require("fs");
 const db = require("../db.cjs");
@@ -33,14 +33,34 @@ function getReceiptData(saleId) {
 }
 
 function markPrintedInternal(saleId) {
-  const stmt = db.prepare(`
-    UPDATE receipts
-    SET printed_at = CURRENT_TIMESTAMP,
-        print_count = print_count + 1
-    WHERE sale_id = ?
-  `);
+  const existing = db
+    .prepare(
+      `
+      SELECT sale_id
+      FROM receipts
+      WHERE sale_id = ?
+      LIMIT 1
+    `,
+    )
+    .get(saleId);
 
-  stmt.run(saleId);
+  if (existing) {
+    db.prepare(
+      `
+      UPDATE receipts
+      SET printed_at = CURRENT_TIMESTAMP,
+          print_count = print_count + 1
+      WHERE sale_id = ?
+    `,
+    ).run(saleId);
+  } else {
+    db.prepare(
+      `
+      INSERT INTO receipts (sale_id, printed_at, print_count)
+      VALUES (?, CURRENT_TIMESTAMP, 1)
+    `,
+    ).run(saleId);
+  }
 }
 
 function formatMoney(value) {
@@ -234,21 +254,19 @@ function registerReceiptHandlers() {
     requireAuth();
     const { win } = await createReceiptWindow(saleId, { show: true });
 
-    win.webContents.once("did-finish-load", () => {
-      win.webContents.print(
-        {
-          silent: false,
-          printBackground: true,
-        },
-        (success, errorType) => {
-          if (success) {
-            markPrintedInternal(saleId);
-          } else {
-            console.error("Receipt printing failed:", errorType);
-          }
-        },
-      );
-    });
+    win.webContents.print(
+      {
+        silent: false,
+        printBackground: true,
+      },
+      (success, errorType) => {
+        if (success) {
+          markPrintedInternal(saleId);
+        } else {
+          console.error("Receipt printing failed:", errorType);
+        }
+      },
+    );
 
     return { success: true };
   });
