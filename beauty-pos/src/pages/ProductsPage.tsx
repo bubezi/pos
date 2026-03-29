@@ -7,6 +7,7 @@ type ProductFormState = {
   name: string;
   category: string;
   price: string;
+  buying_price: string;
   stock_qty: string;
   reorder_level: string;
 };
@@ -24,6 +25,7 @@ const emptyForm: ProductFormState = {
   name: "",
   category: "",
   price: "",
+  buying_price: "",
   stock_qty: "",
   reorder_level: "",
 };
@@ -137,7 +139,8 @@ export default function ProductsPage() {
       .filter((product) => product.is_active === 1)
       .reduce(
         (sum, product) =>
-          sum + Number(product.price || 0) * Number(product.stock_qty || 0),
+          sum +
+          Number(product.buying_price || 0) * Number(product.stock_qty || 0),
         0,
       );
 
@@ -209,6 +212,7 @@ export default function ProductsPage() {
       name: product.name || "",
       category: product.category || "",
       price: String(product.price ?? ""),
+      buying_price: String(product.buying_price ?? ""),
       stock_qty: String(product.stock_qty ?? ""),
       reorder_level: String(product.reorder_level ?? ""),
     });
@@ -216,7 +220,7 @@ export default function ProductsPage() {
     setIsFormOpen(true);
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SubmitEvent) {
     e.preventDefault();
 
     try {
@@ -228,6 +232,7 @@ export default function ProductsPage() {
         name: form.name.trim(),
         category: form.category.trim(),
         price: Number(form.price || 0),
+        buying_price: Number(form.buying_price || 0),
         stock_qty: Number(form.stock_qty || 0),
         reorder_level: Number(form.reorder_level || 0),
       };
@@ -400,6 +405,7 @@ export default function ProductsPage() {
                 <th>SKU</th>
                 <th>Category</th>
                 <th>Price</th>
+                <th>Buying Price</th>
                 <th>Stock</th>
                 <th>Reorder</th>
                 <th>Status</th>
@@ -430,6 +436,7 @@ export default function ProductsPage() {
                     <td>{product.sku || "-"}</td>
                     <td>{product.category || "-"}</td>
                     <td>KES {Number(product.price).toFixed(2)}</td>
+                    <td>KES {Number(product.buying_price || 0).toFixed(2)}</td>
                     <td>
                       <div className="stock-cell">
                         <span>{product.stock_qty}</span>
@@ -587,7 +594,18 @@ export default function ProductsPage() {
                     placeholder="500"
                   />
                 </label>
-
+                <label>
+                  <span>Buying Price</span>
+                  <input
+                    className="input"
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={form.buying_price}
+                    onChange={(e) => updateForm("buying_price", e.target.value)}
+                    placeholder="300"
+                  />
+                </label>
                 <label>
                   <span>Stock Qty</span>
                   <input

@@ -174,7 +174,7 @@ function buildProductRowsHtml(rows) {
       <td>${escapeHtml(item.sku || "")}</td>
       <td>${escapeHtml(item.name)}</td>
       <td>${escapeHtml(item.category || "—")}</td>
-      <td>KES ${formatMoney(item.price)}</td>
+      <td>KES ${formatMoney(item.buying_price)}</td>
       <td>${item.stock_qty}</td>
       <td>${item.reorder_level}</td>
       <td>${item.is_active ? "Active" : "Inactive"}</td>

@@ -129,7 +129,7 @@ export default function ReportsPage() {
                 <td>{item.sku}</td>
                 <td>{item.name}</td>
                 <td>{item.category || "—"}</td>
-                <td>{formatCurrency(item.price)}</td>
+                <td>{formatCurrency(item.buying_price)}</td>
                 <td>{item.stock_qty}</td>
                 <td>{item.reorder_level}</td>
                 <td>{item.is_active ? "Active" : "Inactive"}</td>

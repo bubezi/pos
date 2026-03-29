@@ -155,3 +155,25 @@
     padding: 24px;
   }
 }
+
+.login-shell {
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--panel) 88%, transparent);
+  box-shadow: var(--shadow);
+}
+
+.login-hero {
+  background:
+    linear-gradient(160deg, var(--accent-bg), transparent 55%),
+    var(--panel-2);
+}
+
+.login-card {
+  background: var(--panel);
+}
+
+.login-alert {
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
+  background: var(--danger-bg);
+  color: var(--danger);
+}

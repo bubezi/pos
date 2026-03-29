@@ -130,6 +130,7 @@ declare global {
     name: string;
     category?: string;
     price: number;
+    buying_price: number;
     stock_qty: number;
     reorder_level: number;
     is_active: number;
@@ -335,6 +336,7 @@ declare global {
     name: string;
     category: string | null;
     price: number;
+    buying_price: number;
     stock_qty: number;
     reorder_level: number;
     is_active: number;

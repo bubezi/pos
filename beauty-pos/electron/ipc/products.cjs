@@ -25,7 +25,7 @@ function getProductById(productId) {
   return db
     .prepare(
       `
-      SELECT id, sku, name, category, price, stock_qty, reorder_level, is_active
+      SELECT id, sku, name, category, price, buying_price, stock_qty, reorder_level, is_active
       FROM products
       WHERE id = ?
       LIMIT 1
@@ -40,7 +40,7 @@ function registerProductHandlers() {
     return db
       .prepare(
         `
-        SELECT id, sku, name, category, price, stock_qty, reorder_level, is_active
+        SELECT id, sku, name, category, price, buying_price, stock_qty, reorder_level, is_active
         FROM products
         WHERE is_active = 1
         ORDER BY name ASC
@@ -54,7 +54,7 @@ function registerProductHandlers() {
     return db
       .prepare(
         `
-        SELECT id, sku, name, category, price, stock_qty, reorder_level, is_active
+        SELECT id, sku, name, category, price, buying_price, stock_qty, reorder_level, is_active
         FROM products
         ORDER BY is_active DESC, name ASC
       `,
@@ -76,6 +76,7 @@ function registerProductHandlers() {
     const price = toNumber(product.price, 0);
     const stockQty = toNumber(product.stock_qty, 0);
     const reorderLevel = toNumber(product.reorder_level, 0);
+    const buyingPrice = toNumber(product.buying_price, 0);
 
     if (!name) {
       throw new Error("Product name is required.");
@@ -84,11 +85,11 @@ function registerProductHandlers() {
     const result = db
       .prepare(
         `
-        INSERT INTO products (sku, name, category, price, stock_qty, reorder_level)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `,
+    INSERT INTO products (sku, name, category, price, buying_price, stock_qty, reorder_level)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `,
       )
-      .run(sku, name, category, price, stockQty, reorderLevel);
+      .run(sku, name, category, price, buyingPrice, stockQty, reorderLevel);
 
     writeAuditLog({
       session,
@@ -101,6 +102,7 @@ function registerProductHandlers() {
           name,
           category,
           price,
+          buying_price: buyingPrice,
           stock_qty: stockQty,
           reorder_level: reorderLevel,
           is_active: 1,
@@ -121,6 +123,7 @@ function registerProductHandlers() {
     const price = toNumber(product.price, 0);
     const stockQty = toNumber(product.stock_qty, 0);
     const reorderLevel = toNumber(product.reorder_level, 0);
+    const buyingPrice = toNumber(product.buying_price, 0);
 
     if (!id) {
       throw new Error("Product ID is required.");
@@ -143,12 +146,13 @@ function registerProductHandlers() {
         name = ?,
         category = ?,
         price = ?,
+        buying_price = ?,
         stock_qty = ?,
         reorder_level = ?,
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `,
-    ).run(sku, name, category, price, stockQty, reorderLevel, id);
+    ).run(sku, name, category, price, buyingPrice, stockQty, reorderLevel, id);
 
     writeAuditLog({
       session,
@@ -161,6 +165,7 @@ function registerProductHandlers() {
           name: existing.name,
           category: existing.category,
           price: existing.price,
+          buying_price: existing.buying_price,
           stock_qty: existing.stock_qty,
           reorder_level: existing.reorder_level,
           is_active: existing.is_active,
@@ -170,6 +175,7 @@ function registerProductHandlers() {
           name,
           category,
           price,
+          buying_price: buyingPrice,
           stock_qty: stockQty,
           reorder_level: reorderLevel,
           is_active: existing.is_active,
@@ -287,7 +293,7 @@ function registerProductHandlers() {
       db
         .prepare(
           `
-          SELECT id, sku, name, category, price, stock_qty, reorder_level, is_active
+          SELECT id, sku, name, category, price, buying_price, stock_qty, reorder_level, is_active
           FROM products
           WHERE is_active = 1
             AND TRIM(LOWER(sku)) = TRIM(LOWER(?))
@@ -309,7 +315,7 @@ function registerProductHandlers() {
     return db
       .prepare(
         `
-        SELECT id, sku, name, category, price, stock_qty, reorder_level, is_active
+        SELECT id, sku, name, category, price, buying_price, stock_qty, reorder_level, is_active
         FROM products
         WHERE is_active = 1
           AND (

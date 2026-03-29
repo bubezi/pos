@@ -447,3 +447,87 @@
     flex-direction: column;
   }
 }
+.input,
+.login-input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 46px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: var(--panel);
+  color: var(--text-h);
+  outline: none;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease;
+}
+
+.input::placeholder,
+.login-input::placeholder {
+  color: var(--text-m);
+}
+
+.input:focus,
+.login-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-bg);
+}
+
+.button,
+.login-submit {
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-radius: 14px;
+  padding: 12px 16px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform 120ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease,
+    opacity 160ms ease;
+}
+
+.button:hover,
+.login-submit:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.button:active,
+.login-submit:active {
+  transform: translateY(1px);
+}
+
+.button.secondary {
+  background: var(--panel);
+  color: var(--text-h);
+  border-color: var(--border-strong);
+}
+
+.button.secondary:hover {
+  background: var(--panel-hover);
+}
+
+.button.danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: white;
+}
+
+.panel,
+.receipt-card,
+.dashboard-card,
+.user-card,
+.audit-log-row,
+.product-card,
+.cart-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}

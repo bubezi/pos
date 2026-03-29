@@ -71,3 +71,30 @@
 .summary-card-report strong {
   font-size: 18px;
 }
+
+
+/* reports.css */
+.report-panel,
+.summary-card-report {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.report-table th,
+.report-table td {
+  border-bottom: 1px solid var(--border);
+}
+
+.report-table th {
+  color: var(--text-h);
+  background: var(--panel-2);
+}
+
+.summary-card-report span {
+  color: var(--text-m);
+}
+
+.summary-card-report strong {
+  color: var(--text-h);
+}
