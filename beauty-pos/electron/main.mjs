@@ -47,7 +47,7 @@ function setupAutoUpdater() {
     });
 
     if (result.response === 0) {
-      autoUpdater.downloadUpdate();
+      await autoUpdater.downloadUpdate();
     }
   });
 
@@ -57,7 +57,7 @@ function setupAutoUpdater() {
 
   autoUpdater.on("download-progress", (progress) => {
     console.log(
-      `[updater] Download speed: ${progress.bytesPerSecond} - ${progress.percent.toFixed(1)}%`,
+      `[updater] ${progress.percent.toFixed(1)}% at ${progress.bytesPerSecond} B/s`,
     );
 
     if (mainWindow && !mainWindow.isDestroyed()) {
@@ -81,17 +81,24 @@ function setupAutoUpdater() {
     });
 
     if (result.response === 0) {
-      autoUpdater.quitAndInstall();
+      setImmediate(() => autoUpdater.quitAndInstall(false, true));
     }
   });
 
   autoUpdater.on("error", (error) => {
     console.error("[updater] Error:", error);
+
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.setProgressBar(-1);
+    }
+
     dialog.showMessageBox({
       type: "error",
       title: "Update error",
       message: "Failed to check or download updates.",
-      detail: error == null ? "Unknown error" : String(error),
+      detail: error
+        ? String(error.stack || error.message || error)
+        : "Unknown error",
     });
   });
 }
